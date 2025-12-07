@@ -10,9 +10,9 @@
     @click.stop
   >
     <div class="flex-cb px-3.5 mt-3.5">
-      <span class="text-base font-medium text-g-800">{{ $t('notice.title') }}</span>
+      <span class="text-base font-medium text-g-800">通知</span>
       <span class="text-xs text-g-800 px-1.5 py-1 c-p select-none rounded hover:bg-g-200">
-        {{ $t('notice.btnRead') }}
+        标为已读
       </span>
     </div>
 
@@ -79,22 +79,17 @@
           </li>
         </ul>
 
-        <!-- 空状态 -->
         <div
           v-show="currentTabIsEmpty"
           class="relative top-25 h-full text-g-500 text-center !bg-transparent"
         >
           <ArtSvgIcon icon="system-uicons:inbox" class="text-5xl" />
-          <p class="mt-3.5 text-xs !bg-transparent"
-            >{{ $t('notice.text[0]') }}{{ barList[barActiveIndex].name }}</p
-          >
+          <p class="mt-3.5 text-xs !bg-transparent">暂无{{ barList[barActiveIndex].name }}</p>
         </div>
       </div>
 
       <div class="relative box-border w-full px-3.5">
-        <ElButton class="w-full mt-3" @click="handleViewAll" v-ripple>
-          {{ $t('notice.viewAll') }}
-        </ElButton>
+        <ElButton class="w-full mt-3" @click="handleViewAll" v-ripple> 查看全部 </ElButton>
       </div>
     </div>
 
@@ -104,7 +99,6 @@
 
 <script setup lang="ts">
   import { computed, ref, watch, type Ref, type ComputedRef } from 'vue'
-  import { useI18n } from 'vue-i18n'
 
   // 导入头像图片
   import avatar1 from '@/assets/images/avatar/avatar1.webp'
@@ -156,8 +150,6 @@
   }
 
   type NoticeType = 'email' | 'message' | 'collection' | 'user' | 'notice'
-
-  const { t } = useI18n()
 
   const props = defineProps<{
     value: boolean
@@ -246,15 +238,15 @@
     // 标签栏数据
     const barList = computed<BarItem[]>(() => [
       {
-        name: computed(() => t('notice.bar[0]')),
+        name: computed(() => '通知'),
         num: noticeList.value.length
       },
       {
-        name: computed(() => t('notice.bar[1]')),
+        name: computed(() => '消息'),
         num: msgList.value.length
       },
       {
-        name: computed(() => t('notice.bar[2]')),
+        name: computed(() => '代办'),
         num: pendingList.value.length
       }
     ])

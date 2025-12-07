@@ -8,7 +8,6 @@
  * - 用户登录状态管理
  * - 用户信息存储
  * - 访问令牌和刷新令牌管理
- * - 语言设置
  * - 搜索历史记录
  * - 锁屏状态和密码管理
  * - 登出清理逻辑
@@ -18,7 +17,6 @@
  * - 用户登录和认证
  * - 权限验证
  * - 个人信息展示
- * - 多语言切换
  * - 锁屏功能
  * - 搜索历史管理
  *
@@ -33,25 +31,21 @@
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { LanguageEnum } from '@/enums/appEnum'
 import { router } from '@/router'
 import { useSettingStore } from './setting'
 import { useWorktabStore } from './worktab'
 import { AppRouteRecord } from '@/types/router'
-import { setPageTitle } from '@/utils/router'
 import { resetRouterState } from '@/router/guards/beforeEach'
 import { useMenuStore } from './menu'
 import { StorageConfig } from '@/utils/storage/storage-config'
 
 /**
  * 用户状态管理
- * 管理用户登录状态、个人信息、语言设置、搜索历史、锁屏状态等
+ * 管理用户登录状态、个人信息、搜索历史、锁屏状态等
  */
 export const useUserStore = defineStore(
   'userStore',
   () => {
-    // 语言设置
-    const language = ref(LanguageEnum.ZH)
     // 登录状态
     const isLogin = ref(false)
     // 锁屏状态
@@ -88,15 +82,6 @@ export const useUserStore = defineStore(
      */
     const setLoginStatus = (status: boolean) => {
       isLogin.value = status
-    }
-
-    /**
-     * 设置语言
-     * @param lang 语言枚举值
-     */
-    const setLanguage = (lang: LanguageEnum) => {
-      setPageTitle(router.currentRoute.value)
-      language.value = lang
     }
 
     /**
@@ -204,7 +189,6 @@ export const useUserStore = defineStore(
     }
 
     return {
-      language,
       isLogin,
       isLock,
       lockPassword,
@@ -217,7 +201,6 @@ export const useUserStore = defineStore(
       getWorktabState,
       setUserInfo,
       setLoginStatus,
-      setLanguage,
       setSearchHistory,
       setLockStatus,
       setLockPassword,

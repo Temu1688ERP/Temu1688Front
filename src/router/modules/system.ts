@@ -5,7 +5,7 @@ export const systemRoutes: AppRouteRecord = {
   name: 'System',
   component: '/index/index',
   meta: {
-    title: 'menus.system.title',
+    title: '系统管理',
     icon: 'ri:user-3-line',
     roles: ['R_SUPER', 'R_ADMIN']
   },
@@ -15,7 +15,7 @@ export const systemRoutes: AppRouteRecord = {
       name: 'User',
       component: '/system/user',
       meta: {
-        title: 'menus.system.user',
+        title: '用户管理',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
@@ -25,7 +25,7 @@ export const systemRoutes: AppRouteRecord = {
       name: 'Role',
       component: '/system/role',
       meta: {
-        title: 'menus.system.role',
+        title: '角色管理',
         keepAlive: true,
         roles: ['R_SUPER']
       }
@@ -35,7 +35,7 @@ export const systemRoutes: AppRouteRecord = {
       name: 'UserCenter',
       component: '/system/user-center',
       meta: {
-        title: 'menus.system.userCenter',
+        title: '个人中心',
         isHide: true,
         keepAlive: true,
         isHideTab: true
@@ -46,7 +46,7 @@ export const systemRoutes: AppRouteRecord = {
       name: 'Menus',
       component: '/system/menu',
       meta: {
-        title: 'menus.system.menu',
+        title: '菜单管理',
         keepAlive: true,
         roles: ['R_SUPER'],
         authList: [

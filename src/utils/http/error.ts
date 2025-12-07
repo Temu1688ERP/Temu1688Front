@@ -23,7 +23,23 @@
  */
 import { AxiosError } from 'axios'
 import { ApiStatus } from './status'
-import { $t } from '@/locales'
+
+// HTTP 错误消息
+const httpMsg = {
+  unauthorized: '未授权访问，请重新登录',
+  forbidden: '禁止访问该资源',
+  notFound: '请求的资源不存在',
+  methodNotAllowed: '请求方法不允许',
+  requestTimeout: '请求超时，请稍后重试',
+  internalServerError: '服务器内部错误，请稍后重试',
+  badGateway: '网关错误，请稍后重试',
+  serviceUnavailable: '服务暂时不可用，请稍后重试',
+  gatewayTimeout: '网关超时，请稍后重试',
+  requestCancelled: '请求已取消',
+  networkError: '网络连接异常，请检查网络连接',
+  requestFailed: '请求失败',
+  requestConfigError: '请求配置错误'
+}
 
 // 错误响应接口
 export interface ErrorResponse {
@@ -99,18 +115,18 @@ export class HttpError extends Error {
  */
 const getErrorMessage = (status: number): string => {
   const errorMap: Record<number, string> = {
-    [ApiStatus.unauthorized]: 'httpMsg.unauthorized',
-    [ApiStatus.forbidden]: 'httpMsg.forbidden',
-    [ApiStatus.notFound]: 'httpMsg.notFound',
-    [ApiStatus.methodNotAllowed]: 'httpMsg.methodNotAllowed',
-    [ApiStatus.requestTimeout]: 'httpMsg.requestTimeout',
-    [ApiStatus.internalServerError]: 'httpMsg.internalServerError',
-    [ApiStatus.badGateway]: 'httpMsg.badGateway',
-    [ApiStatus.serviceUnavailable]: 'httpMsg.serviceUnavailable',
-    [ApiStatus.gatewayTimeout]: 'httpMsg.gatewayTimeout'
+    [ApiStatus.unauthorized]: httpMsg.unauthorized,
+    [ApiStatus.forbidden]: httpMsg.forbidden,
+    [ApiStatus.notFound]: httpMsg.notFound,
+    [ApiStatus.methodNotAllowed]: httpMsg.methodNotAllowed,
+    [ApiStatus.requestTimeout]: httpMsg.requestTimeout,
+    [ApiStatus.internalServerError]: httpMsg.internalServerError,
+    [ApiStatus.badGateway]: httpMsg.badGateway,
+    [ApiStatus.serviceUnavailable]: httpMsg.serviceUnavailable,
+    [ApiStatus.gatewayTimeout]: httpMsg.gatewayTimeout
   }
 
-  return $t(errorMap[status] || 'httpMsg.internalServerError')
+  return errorMap[status] || httpMsg.internalServerError
 }
 
 /**
@@ -122,7 +138,7 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
   // 处理取消的请求
   if (error.code === 'ERR_CANCELED') {
     console.warn('Request cancelled:', error.message)
-    throw new HttpError($t('httpMsg.requestCancelled'), ApiStatus.error)
+    throw new HttpError(httpMsg.requestCancelled, ApiStatus.error)
   }
 
   const statusCode = error.response?.status
@@ -131,16 +147,14 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
 
   // 处理网络错误
   if (!error.response) {
-    throw new HttpError($t('httpMsg.networkError'), ApiStatus.error, {
+    throw new HttpError(httpMsg.networkError, ApiStatus.error, {
       url: requestConfig?.url,
       method: requestConfig?.method?.toUpperCase()
     })
   }
 
   // 处理 HTTP 状态码错误
-  const message = statusCode
-    ? getErrorMessage(statusCode)
-    : errorMessage || $t('httpMsg.requestFailed')
+  const message = statusCode ? getErrorMessage(statusCode) : errorMessage || httpMsg.requestFailed
   throw new HttpError(message, statusCode || ApiStatus.error, {
     data: error.response.data,
     url: requestConfig?.url,
