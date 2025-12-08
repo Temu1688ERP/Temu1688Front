@@ -101,7 +101,7 @@ export default ({ mode }: { mode: string }) => {
       }),
       vitePluginBundleObfuscator({
         autoExcludeNodeModules: true,
-        threadPool: true
+        threadPool: false
       })
       // vueDevTools()
       // 打包分析
