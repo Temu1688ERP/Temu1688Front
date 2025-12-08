@@ -6,7 +6,8 @@ export const exceptionRoutes: AppRouteRecord = {
   component: '/index/index',
   meta: {
     title: '异常页面',
-    icon: 'ri:error-warning-line'
+    icon: 'ri:error-warning-line',
+    isHide: true
   },
   children: [
     {
