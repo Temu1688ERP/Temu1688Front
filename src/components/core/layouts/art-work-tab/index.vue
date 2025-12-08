@@ -84,12 +84,11 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, ref, watch, nextTick, onUnmounted } from 'vue'
+  import { computed, onMounted, ref, watch, onUnmounted } from 'vue'
   import { LocationQueryRaw, useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
 
   import { useWorktabStore } from '@/store/modules/worktab'
-  import { useUserStore } from '@/store/modules/user'
   import { formatMenuTitle } from '@/utils/router'
   import { useSettingStore } from '@/store/modules/setting'
   import { MenuItemType } from '../../others/art-menu-right/index.vue'
@@ -113,7 +112,6 @@
 
   // 基础设置
   const store = useWorktabStore()
-  const userStore = useUserStore()
   const route = useRoute()
   const router = useRouter()
   const { currentRoute } = router
@@ -376,7 +374,7 @@
     }
 
     const closeWorktab = (type: TabCloseType, tabPath: string) => {
-      const path = typeof tabPath === 'string' ? tabPath : route.path
+      const path = tabPath || route.path
 
       const closeActions = {
         current: () => store.removeTab(path),
@@ -463,16 +461,6 @@
     () => {
       setTransition()
       autoPositionTab()
-    }
-  )
-
-  watch(
-    () => userStore.language,
-    () => {
-      scrollState.value.translateX = 0
-      nextTick(() => {
-        autoPositionTab()
-      })
     }
   )
 </script>
