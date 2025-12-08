@@ -60,10 +60,6 @@
               </p>
             </div>
 
-            <div class="mt-2 text-sm">
-              <ElCheckbox v-model="formData.rememberPassword">记住密码</ElCheckbox>
-            </div>
-
             <div style="margin-top: 30px">
               <ElButton
                 class="w-full custom-height"
@@ -109,8 +105,7 @@
 
   const formData = reactive({
     username: '',
-    password: '',
-    rememberPassword: true
+    password: ''
   })
 
   const rules: FormRules = {
