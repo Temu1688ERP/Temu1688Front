@@ -100,7 +100,7 @@ export default ({ mode }: { mode: string }) => {
         bundler: 'vite'
       }),
       vitePluginBundleObfuscator({
-        autoExcludeNodeModules: false,
+        autoExcludeNodeModules: true,
         threadPool: false
       })
       // vueDevTools()
