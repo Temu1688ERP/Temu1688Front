@@ -126,10 +126,10 @@ export const useUserStore = defineStore(
      * 如果是同一账号重新登录，保留工作台标签页
      */
     const logOut = () => {
-      // 保存当前用户 ID，用于下次登录时判断是否为同一用户
-      const currentUserId = info.value.userId
-      if (currentUserId) {
-        localStorage.setItem(StorageConfig.LAST_USER_ID_KEY, String(currentUserId))
+      // 保存当前用户名，用于下次登录时判断是否为同一用户
+      const currentUsername = info.value.username
+      if (currentUsername) {
+        localStorage.setItem(StorageConfig.LAST_USER_ID_KEY, currentUsername)
       }
 
       // 清空用户信息
@@ -166,19 +166,19 @@ export const useUserStore = defineStore(
      * 应在登录成功后调用
      */
     const checkAndClearWorktabs = () => {
-      const lastUserId = localStorage.getItem(StorageConfig.LAST_USER_ID_KEY)
-      const currentUserId = info.value.userId
+      const lastUsername = localStorage.getItem(StorageConfig.LAST_USER_ID_KEY)
+      const currentUsername = info.value.username
 
-      // 无法获取当前用户 ID，跳过检查
-      if (!currentUserId) return
+      // 无法获取当前用户名，跳过检查
+      if (!currentUsername) return
 
       // 首次登录或缓存已清除，保留现有标签页
-      if (!lastUserId) {
+      if (!lastUsername) {
         return
       }
 
       // 不同用户登录，清空工作台标签页
-      if (String(currentUserId) !== lastUserId) {
+      if (currentUsername !== lastUsername) {
         const worktabStore = useWorktabStore()
         worktabStore.opened = []
         worktabStore.keepAliveExclude = []

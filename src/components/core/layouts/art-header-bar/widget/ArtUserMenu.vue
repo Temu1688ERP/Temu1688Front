@@ -19,7 +19,7 @@
       />
     </template>
     <template #default>
-      <div class="pt-3">
+      <li class="pt-3">
         <div class="flex-c pb-1 px-0">
           <img
             class="w-10 h-10 mr-3 ml-0 overflow-hidden rounded-full float-left"
@@ -27,9 +27,9 @@
           />
           <div class="w-[calc(100%-60px)] h-full">
             <span class="block text-sm font-medium text-g-800 truncate">{{
-              userInfo.userName
+              userInfo.username
             }}</span>
-            <span class="block mt-0.5 text-xs text-g-500 truncate">{{ userInfo.email }}</span>
+            <span class="block mt-0.5 text-xs text-g-500 truncate">{{ userInfo.nickname }}</span>
           </div>
         </div>
         <ul class="py-4 mt-3 border-t border-g-300/80">
@@ -37,22 +37,14 @@
             <ArtSvgIcon icon="ri:user-3-line" />
             <span>个人中心</span>
           </li>
-          <li class="btn-item" @click="toDocs()">
-            <ArtSvgIcon icon="ri:book-2-line" />
-            <span>使用文档</span>
-          </li>
-          <li class="btn-item" @click="toGithub()">
-            <ArtSvgIcon icon="ri:github-line" />
-            <span>Github</span>
-          </li>
           <li class="btn-item" @click="lockScreen()">
             <ArtSvgIcon icon="ri:lock-line" />
             <span>锁定屏幕</span>
           </li>
-          <div class="w-full h-px my-2 bg-g-300/80"></div>
-          <div class="log-out c-p" @click="loginOut"> 退出登录 </div>
+          <li class="w-full h-px my-2 bg-g-300/80"></li>
+          <li class="log-out c-p" @click="loginOut"> 退出登录 </li>
         </ul>
-      </div>
+      </li>
     </template>
   </ElPopover>
 </template>
@@ -61,7 +53,6 @@
   import { useRouter } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
   import { useUserStore } from '@/store/modules/user'
-  import { WEB_LINKS } from '@/utils/constants'
   import { mittBus } from '@/utils/sys'
 
   defineOptions({ name: 'ArtUserMenu' })
@@ -78,20 +69,6 @@
    */
   const goPage = (path: string): void => {
     router.push(path)
-  }
-
-  /**
-   * 打开文档页面
-   */
-  const toDocs = (): void => {
-    window.open(WEB_LINKS.DOCS)
-  }
-
-  /**
-   * 打开 GitHub 页面
-   */
-  const toGithub = (): void => {
-    window.open(WEB_LINKS.GITHUB)
   }
 
   /**
