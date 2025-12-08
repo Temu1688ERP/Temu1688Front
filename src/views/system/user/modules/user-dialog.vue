@@ -9,38 +9,27 @@
       <ElFormItem label="用户名" prop="username">
         <ElInput v-model="formData.username" placeholder="请输入用户名" />
       </ElFormItem>
-      <ElFormItem label="手机号" prop="phone">
-        <ElInput v-model="formData.phone" placeholder="请输入手机号" />
-      </ElFormItem>
-      <ElFormItem label="性别" prop="gender">
-        <ElSelect v-model="formData.gender">
-          <ElOption label="男" value="男" />
-          <ElOption label="女" value="女" />
-        </ElSelect>
-      </ElFormItem>
-      <ElFormItem label="角色" prop="role">
-        <ElSelect v-model="formData.role" multiple>
-          <ElOption
-            v-for="role in roleList"
-            :key="role.roleCode"
-            :value="role.roleCode"
-            :label="role.roleName"
-          />
-        </ElSelect>
+      <ElFormItem label="密码" prop="password">
+        <ElInput
+          v-model="formData.password"
+          type="password"
+          placeholder="请输入密码"
+          show-password
+        />
       </ElFormItem>
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
         <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+        <ElButton type="primary" :loading="loading" @click="handleSubmit">提交</ElButton>
       </div>
     </template>
   </ElDialog>
 </template>
 
 <script setup lang="ts">
-  import { ROLE_LIST_DATA } from '@/mock/temp/formData'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { fetchCreateUser, fetchUpdateUser } from '@/api/system-manage'
 
   interface Props {
     visible: boolean
@@ -56,9 +45,6 @@
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
 
-  // 角色列表数据
-  const roleList = ref(ROLE_LIST_DATA)
-
   // 对话框显示控制
   const dialogVisible = computed({
     get: () => props.visible,
@@ -69,13 +55,13 @@
 
   // 表单实例
   const formRef = ref<FormInstance>()
+  const loading = ref(false)
 
   // 表单数据
   const formData = reactive({
+    id: undefined as number | undefined,
     username: '',
-    phone: '',
-    gender: '男',
-    role: [] as string[]
+    password: ''
   })
 
   // 表单验证规则
@@ -84,12 +70,10 @@
       { required: true, message: '请输入用户名', trigger: 'blur' },
       { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
     ],
-    phone: [
-      { required: true, message: '请输入手机号', trigger: 'blur' },
-      { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' }
-    ],
-    gender: [{ required: true, message: '请选择性别', trigger: 'blur' }],
-    role: [{ required: true, message: '请选择角色', trigger: 'blur' }]
+    password: [
+      { required: true, message: '请输入密码', trigger: 'blur' },
+      { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+    ]
   }
 
   /**
@@ -101,10 +85,9 @@
     const row = props.userData
 
     Object.assign(formData, {
-      username: isEdit && row ? row.userName || '' : '',
-      phone: isEdit && row ? row.userPhone || '' : '',
-      gender: isEdit && row ? row.userGender || '男' : '男',
-      role: isEdit && row ? (Array.isArray(row.userRoles) ? row.userRoles : []) : []
+      id: isEdit && row ? row.id : undefined,
+      username: isEdit && row ? row.username || '' : '',
+      password: ''
     })
   }
 
@@ -127,16 +110,35 @@
 
   /**
    * 提交表单
-   * 验证通过后触发提交事件
+   * 验证通过后调用 API
    */
   const handleSubmit = async () => {
     if (!formRef.value) return
 
-    await formRef.value.validate((valid) => {
+    await formRef.value.validate(async (valid) => {
       if (valid) {
-        ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
-        dialogVisible.value = false
-        emit('submit')
+        try {
+          loading.value = true
+          if (dialogType.value === 'add') {
+            await fetchCreateUser({
+              username: formData.username,
+              password: formData.password
+            })
+          } else {
+            await fetchUpdateUser({
+              id: formData.id,
+              username: formData.username,
+              password: formData.password
+            })
+          }
+          ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
+          dialogVisible.value = false
+          emit('submit')
+        } catch (error) {
+          console.error('提交失败:', error)
+        } finally {
+          loading.value = false
+        }
       }
     })
   }

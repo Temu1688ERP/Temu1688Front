@@ -53,7 +53,8 @@ export const systemRoutes: AppRouteRecord = {
           { title: '新增', authMark: 'add' },
           { title: '编辑', authMark: 'edit' },
           { title: '删除', authMark: 'delete' }
-        ]
+        ],
+        isHide: true
       }
     }
   ]

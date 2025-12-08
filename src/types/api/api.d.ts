@@ -84,30 +84,28 @@ declare namespace Api {
   /** 系统管理类型 */
   namespace SystemManage {
     /** 用户列表 */
-    type UserList = Api.Common.PaginatedResponse<UserListItem>
+    type UserList = UserListItem[]
 
     /** 用户列表项 */
     interface UserListItem {
       id: number
-      avatar: string
-      status: string
-      userName: string
-      userGender: string
-      nickName: string
-      userPhone: string
-      userEmail: string
-      userRoles: string[]
-      createBy: string
-      createTime: string
-      updateBy: string
-      updateTime: string
+      created_at: string
+      updated_at: string
+      deleted_at: string | null
+      username: string
+      password: string
+      Nickname: string
     }
 
     /** 用户搜索参数 */
-    type UserSearchParams = Partial<
-      Pick<UserListItem, 'id' | 'userName' | 'userGender' | 'userPhone' | 'userEmail' | 'status'> &
-        Api.Common.CommonSearchParams
-    >
+    type UserSearchParams = Partial<Pick<UserListItem, 'id' | 'username'>>
+
+    /** 用户表单参数 */
+    interface UserFormParams {
+      id?: number
+      username: string
+      password: string
+    }
 
     /** 角色列表 */
     type RoleList = Api.Common.PaginatedResponse<RoleListItem>
