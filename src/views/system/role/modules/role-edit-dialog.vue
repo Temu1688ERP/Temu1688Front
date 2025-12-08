@@ -7,33 +7,20 @@
     @close="handleClose"
   >
     <ElForm ref="formRef" :model="form" :rules="rules" label-width="120px">
-      <ElFormItem label="角色名称" prop="roleName">
-        <ElInput v-model="form.roleName" placeholder="请输入角色名称" />
-      </ElFormItem>
-      <ElFormItem label="角色编码" prop="roleCode">
-        <ElInput v-model="form.roleCode" placeholder="请输入角色编码" />
-      </ElFormItem>
-      <ElFormItem label="描述" prop="description">
-        <ElInput
-          v-model="form.description"
-          type="textarea"
-          :rows="3"
-          placeholder="请输入角色描述"
-        />
-      </ElFormItem>
-      <ElFormItem label="启用">
-        <ElSwitch v-model="form.enabled" />
+      <ElFormItem label="角色名称" prop="name">
+        <ElInput v-model="form.name" placeholder="请输入角色名称" />
       </ElFormItem>
     </ElForm>
     <template #footer>
       <ElButton @click="handleClose">取消</ElButton>
-      <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+      <ElButton type="primary" :loading="loading" @click="handleSubmit">提交</ElButton>
     </template>
   </ElDialog>
 </template>
 
 <script setup lang="ts">
   import type { FormInstance, FormRules } from 'element-plus'
+  import { fetchCreateRole, fetchUpdateRole } from '@/api/system-manage'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -57,6 +44,7 @@
   const emit = defineEmits<Emits>()
 
   const formRef = ref<FormInstance>()
+  const loading = ref(false)
 
   /**
    * 弹窗显示状态双向绑定
@@ -70,27 +58,18 @@
    * 表单验证规则
    */
   const rules = reactive<FormRules>({
-    roleName: [
+    name: [
       { required: true, message: '请输入角色名称', trigger: 'blur' },
       { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
-    ],
-    roleCode: [
-      { required: true, message: '请输入角色编码', trigger: 'blur' },
-      { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
-    ],
-    description: [{ required: true, message: '请输入角色描述', trigger: 'blur' }]
+    ]
   })
 
   /**
    * 表单数据
    */
-  const form = reactive<RoleListItem>({
-    roleId: 0,
-    roleName: '',
-    roleCode: '',
-    description: '',
-    createTime: '',
-    enabled: true
+  const form = reactive({
+    id: undefined as number | undefined,
+    name: ''
   })
 
   /**
@@ -120,15 +99,14 @@
    */
   const initForm = () => {
     if (props.dialogType === 'edit' && props.roleData) {
-      Object.assign(form, props.roleData)
+      Object.assign(form, {
+        id: props.roleData.id,
+        name: props.roleData.name
+      })
     } else {
       Object.assign(form, {
-        roleId: 0,
-        roleName: '',
-        roleCode: '',
-        description: '',
-        createTime: '',
-        enabled: true
+        id: undefined,
+        name: ''
       })
     }
   }
@@ -150,13 +128,29 @@
 
     try {
       await formRef.value.validate()
-      // TODO: 调用新增/编辑接口
+      loading.value = true
+
+      if (props.dialogType === 'add') {
+        await fetchCreateRole({
+          name: form.name,
+          permissions: []
+        })
+      } else {
+        await fetchUpdateRole({
+          id: form.id,
+          name: form.name,
+          permissions: []
+        })
+      }
+
       const message = props.dialogType === 'add' ? '新增成功' : '修改成功'
       ElMessage.success(message)
       emit('success')
       handleClose()
     } catch (error) {
-      console.log('表单验证失败:', error)
+      console.log('提交失败:', error)
+    } finally {
+      loading.value = false
     }
   }
 </script>

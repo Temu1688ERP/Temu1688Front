@@ -82,8 +82,6 @@
         ...searchForm.value
       },
       columnsFactory: () => [
-        { type: 'selection' }, // 勾选列
-        { type: 'index', width: 60, label: '序号' }, // 序号
         { prop: 'id', label: 'ID', width: 80 },
         { prop: 'username', label: '用户名' },
         { prop: 'nickname', label: '昵称' },

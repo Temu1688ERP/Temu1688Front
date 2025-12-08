@@ -36,8 +36,32 @@ export function fetchDeleteUser(id: number) {
 // 获取角色列表
 export function fetchGetRoleList(params: Api.SystemManage.RoleSearchParams) {
   return request.get<Api.SystemManage.RoleList>({
-    url: '/api/role/list',
+    url: '/api/roles',
     params
+  })
+}
+
+// 创建角色
+export function fetchCreateRole(data: Api.SystemManage.RoleFormParams) {
+  return request.post({
+    url: '/api/roles',
+    data
+  })
+}
+
+// 更新角色
+export function fetchUpdateRole(data: Api.SystemManage.RoleFormParams) {
+  return request.post({
+    url: '/api/roles',
+    data
+  })
+}
+
+// 删除角色
+export function fetchDeleteRole(id: number) {
+  return request.del({
+    url: '/api/roles',
+    data: { id }
   })
 }
 

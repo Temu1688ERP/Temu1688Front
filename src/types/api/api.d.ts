@@ -108,22 +108,36 @@ declare namespace Api {
     }
 
     /** 角色列表 */
-    type RoleList = Api.Common.PaginatedResponse<RoleListItem>
+    type RoleList = RoleListItem[]
+
+    /** 权限项 */
+    interface PermissionItem {
+      id: number
+      created_at: string
+      updated_at: string
+      deleted_at: string | null
+      name: string
+      path: string
+    }
 
     /** 角色列表项 */
     interface RoleListItem {
-      roleId: number
-      roleName: string
-      roleCode: string
-      description: string
-      enabled: boolean
-      createTime: string
+      id: number
+      created_at: string
+      updated_at: string
+      deleted_at: string | null
+      name: string
+      permissions: PermissionItem[]
     }
 
     /** 角色搜索参数 */
-    type RoleSearchParams = Partial<
-      Pick<RoleListItem, 'roleId' | 'roleName' | 'roleCode' | 'description' | 'enabled'> &
-        Api.Common.CommonSearchParams
-    >
+    type RoleSearchParams = Partial<Pick<RoleListItem, 'id' | 'name'>>
+
+    /** 角色表单参数 */
+    interface RoleFormParams {
+      id?: number
+      name: string
+      permissions: number[]
+    }
   }
 }
