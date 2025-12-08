@@ -25,18 +25,6 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     meta: { title: '登录', isHideTab: true }
   },
   {
-    path: '/auth/register',
-    name: 'Register',
-    component: () => import('@views/auth/register/index.vue'),
-    meta: { title: '注册', isHideTab: true }
-  },
-  {
-    path: '/auth/forget-password',
-    name: 'ForgetPassword',
-    component: () => import('@views/auth/forget-password/index.vue'),
-    meta: { title: '忘记密码', isHideTab: true }
-  },
-  {
     path: '/403',
     name: 'Exception403',
     component: () => import('@views/exception/403/index.vue'),

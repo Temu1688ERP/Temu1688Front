@@ -17,18 +17,6 @@
             @keyup.enter="handleSubmit"
             style="margin-top: 25px"
           >
-            <ElFormItem prop="account">
-              <ElSelect v-model="formData.account" @change="setupAccount">
-                <ElOption
-                  v-for="account in accounts"
-                  :key="account.key"
-                  :label="account.label"
-                  :value="account.key"
-                >
-                  <span>{{ account.label }}</span>
-                </ElOption>
-              </ElSelect>
-            </ElFormItem>
             <ElFormItem prop="username">
               <ElInput
                 class="custom-height"
@@ -72,9 +60,8 @@
               </p>
             </div>
 
-            <div class="flex-cb mt-2 text-sm">
+            <div class="mt-2 text-sm">
               <ElCheckbox v-model="formData.rememberPassword">记住密码</ElCheckbox>
-              <RouterLink class="text-theme" :to="{ name: 'ForgetPassword' }">忘记密码</RouterLink>
             </div>
 
             <div style="margin-top: 30px">
@@ -87,11 +74,6 @@
               >
                 登录
               </ElButton>
-            </div>
-
-            <div class="mt-5 text-sm text-gray-600">
-              <span>还没有账号？</span>
-              <RouterLink class="text-theme" :to="{ name: 'Register' }">注册</RouterLink>
             </div>
           </ElForm>
         </div>
@@ -114,40 +96,6 @@
   const settingStore = useSettingStore()
   const { isDark } = storeToRefs(settingStore)
 
-  type AccountKey = 'super' | 'admin' | 'user'
-
-  export interface Account {
-    key: AccountKey
-    label: string
-    userName: string
-    password: string
-    roles: string[]
-  }
-
-  const accounts: Account[] = [
-    {
-      key: 'super',
-      label: '超级管理员',
-      userName: 'Super',
-      password: '123456',
-      roles: ['R_SUPER']
-    },
-    {
-      key: 'admin',
-      label: '管理员',
-      userName: 'Admin',
-      password: '123456',
-      roles: ['R_ADMIN']
-    },
-    {
-      key: 'user',
-      label: '普通用户',
-      userName: 'User',
-      password: '123456',
-      roles: ['R_USER']
-    }
-  ]
-
   const dragVerify = ref()
 
   const userStore = useUserStore()
@@ -160,7 +108,6 @@
   const formRef = ref<FormInstance>()
 
   const formData = reactive({
-    account: '',
     username: '',
     password: '',
     rememberPassword: true
@@ -172,18 +119,6 @@
   }
 
   const loading = ref(false)
-
-  onMounted(() => {
-    setupAccount('super')
-  })
-
-  // 设置账号
-  const setupAccount = (key: AccountKey) => {
-    const selectedAccount = accounts.find((account: Account) => account.key === key)
-    formData.account = key
-    formData.username = selectedAccount?.userName ?? ''
-    formData.password = selectedAccount?.password ?? ''
-  }
 
   // 登录
   const handleSubmit = async () => {
@@ -210,11 +145,6 @@
         password
       })
 
-      // 验证token
-      if (!token) {
-        throw new Error('Login failed - no token received')
-      }
-
       // 存储 token 和登录状态
       userStore.setToken(token, refreshToken)
       userStore.setLoginStatus(true)
@@ -224,7 +154,7 @@
 
       // 获取 redirect 参数，如果存在则跳转到指定页面，否则跳转到首页
       const redirect = route.query.redirect as string
-      router.push(redirect || '/')
+      await router.push(redirect || '/')
     } catch (error) {
       // 处理 HttpError
       if (error instanceof HttpError) {
@@ -261,10 +191,4 @@
 
 <style scoped>
   @import './style.css';
-</style>
-
-<style lang="scss" scoped>
-  :deep(.el-select__wrapper) {
-    height: 40px !important;
-  }
 </style>
