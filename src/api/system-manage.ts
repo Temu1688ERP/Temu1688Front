@@ -71,3 +71,35 @@ export function fetchGetMenuList() {
     url: '/api/v3/system/menus/simple'
   })
 }
+
+// 获取TEMU列表
+export function fetchGetTemuList(params: Api.SystemManage.TemuSearchParams) {
+  return request.get<Api.SystemManage.TemuList>({
+    url: '/api/temu/accounts',
+    params
+  })
+}
+
+// 创建TEMU
+export function fetchCreateTemu(data: Api.SystemManage.TemuFormParams) {
+  return request.post({
+    url: '/api/temu/accounts',
+    data
+  })
+}
+
+// 更新TEMU
+export function fetchUpdateTemu(data: Api.SystemManage.TemuFormParams) {
+  return request.post({
+    url: '/api/temu/accounts',
+    data
+  })
+}
+
+// 删除TEMU
+export function fetchDeleteTemu(id: number) {
+  return request.del({
+    url: '/api/temu/accounts',
+    data: { id }
+  })
+}

@@ -139,5 +139,33 @@ declare namespace Api {
       name: string
       permissions: number[]
     }
+
+    /** TEMU列表 */
+    type TemuList = TemuListItem[]
+
+    /** TEMU状态 */
+    type TemuStatus = 'normal' | 'offline' | 'exception' | 'unknown'
+
+    /** TEMU列表项 */
+    interface TemuListItem {
+      id: number
+      created_at: string
+      updated_at: string
+      deleted_at: string | null
+      username: string
+      password: string
+      status: TemuStatus
+    }
+
+    /** TEMU搜索参数 */
+    type TemuSearchParams = Partial<Pick<TemuListItem, 'id' | 'username' | 'status'>>
+
+    /** TEMU表单参数 */
+    interface TemuFormParams {
+      id?: number
+      username: string
+      password: string
+      status?: TemuStatus
+    }
   }
 }

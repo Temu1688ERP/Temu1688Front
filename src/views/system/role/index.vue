@@ -184,7 +184,7 @@
         try {
           await fetchDeleteRole(row.id)
           ElMessage.success('删除成功')
-          refreshData()
+          await refreshData()
         } catch (error) {
           console.error('删除失败:', error)
         }
