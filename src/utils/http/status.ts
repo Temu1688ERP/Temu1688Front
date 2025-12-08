@@ -6,6 +6,8 @@ export enum ApiStatus {
   error = 400, // 错误
   unauthorized = 401, // 未授权
   forbidden = 403, // 禁止访问
+  loginInvalid = 403000, // 登录无效
+  loginExpired = 403001, // 登录过期
   notFound = 404, // 未找到
   methodNotAllowed = 405, // 方法不允许
   requestTimeout = 408, // 请求超时

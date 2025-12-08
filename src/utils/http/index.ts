@@ -91,7 +91,7 @@ axiosInstance.interceptors.response.use(
   (response: AxiosResponse<BaseResponse>) => {
     const { code, msg } = response.data
     if (code === ApiStatus.success) return response
-    if (code === ApiStatus.unauthorized) handleUnauthorizedError(msg)
+    if (isLoginInvalidCode(code)) handleUnauthorizedError(msg)
     throw createHttpError(msg || httpMsg.requestFailed, code)
   },
   (error) => {
@@ -99,6 +99,11 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(handleError(error))
   }
 )
+
+/** 判断是否为登录无效的错误码 */
+function isLoginInvalidCode(code: number): boolean {
+  return [ApiStatus.unauthorized, ApiStatus.loginInvalid, ApiStatus.loginExpired].includes(code)
+}
 
 /** 统一创建HttpError */
 function createHttpError(message: string, code: number) {
@@ -190,7 +195,7 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
 
     return res.data.data as T
   } catch (error) {
-    if (error instanceof HttpError && error.code !== ApiStatus.unauthorized) {
+    if (error instanceof HttpError && !isLoginInvalidCode(error.code)) {
       const showMsg = config.showErrorMessage !== false
       showError(error, showMsg)
     }
