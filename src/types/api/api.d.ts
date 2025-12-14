@@ -170,4 +170,68 @@ declare namespace Api {
       status?: TemuStatus
     }
   }
+
+  /** 商品管理类型 */
+  namespace Goods {
+    /** 商品列表 */
+    type GoodsList = GoodsListItem[]
+
+    /** 商品状态 */
+    type GoodsStatus = 'on_sale' | 'off_sale' | 'out_of_stock'
+
+    /** 商品列表项 */
+    interface GoodsListItem {
+      id: number
+      created_at: string
+      updated_at: string
+      deleted_at: string | null
+      sku: string
+      spu: string
+      name: string
+      image: string
+      price: number
+      stock: number
+      category: string
+      brand: string
+      spec: string
+      status: GoodsStatus
+    }
+
+    /** 商品搜索参数 */
+    type GoodsSearchParams = Partial<
+      Pick<GoodsListItem, 'sku' | 'spu' | 'name' | 'category' | 'brand' | 'status'>
+    >
+  }
+
+  /** 订单管理类型 */
+  namespace Order {
+    /** 订单列表 */
+    type OrderList = OrderListItem[]
+
+    /** 订单状态 */
+    type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
+
+    /** 订单列表项 */
+    interface OrderListItem {
+      id: number
+      created_at: string
+      updated_at: string
+      deleted_at: string | null
+      order_no: string
+      sku: string
+      goods_name: string
+      quantity: number
+      unit_price: number
+      total_amount: number
+      buyer: string
+      address: string
+      logistics: string
+      status: OrderStatus
+    }
+
+    /** 订单搜索参数 */
+    type OrderSearchParams = Partial<
+      Pick<OrderListItem, 'order_no' | 'sku' | 'goods_name' | 'buyer' | 'status'>
+    >
+  }
 }
