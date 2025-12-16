@@ -55,9 +55,11 @@
     TemuStatus,
     { label: string; type: 'success' | 'danger' | 'warning' | 'info' }
   > = {
+    waiting: { label: '待验证', type: 'warning' },
+    processing: { label: '验证中', type: 'warning' },
     normal: { label: '正常', type: 'success' },
-    offline: { label: '已离线', type: 'danger' },
-    exception: { label: '异常', type: 'warning' },
+    offline: { label: '已离线', type: 'warning' },
+    exception: { label: '异常', type: 'danger' },
     unknown: { label: '未知', type: 'info' }
   }
 
@@ -99,11 +101,17 @@
         {
           prop: 'status',
           label: '状态',
-          width: 100,
+          width: 120,
           formatter: (row: TemuListItem) => {
             const status = statusMap[row.status] || statusMap.unknown
             return h(ElTag, { type: status.type }, () => status.label)
           }
+        },
+        {
+          prop: 'reason',
+          label: '异常原因',
+          minWidth: 160,
+          formatter: (row: TemuListItem) => (row.status === 'exception' ? row.reason || '-' : '-')
         },
         { prop: 'created_at', label: '创建时间', sortable: true },
         { prop: 'updated_at', label: '更新时间', sortable: true },

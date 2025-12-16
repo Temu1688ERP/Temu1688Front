@@ -146,7 +146,7 @@ declare namespace Api {
     type TemuList = TemuListItem[]
 
     /** TEMU状态 */
-    type TemuStatus = 'normal' | 'offline' | 'exception' | 'unknown'
+    type TemuStatus = 'waiting' | 'processing' | 'normal' | 'offline' | 'exception' | 'unknown'
 
     /** TEMU列表项 */
     interface TemuListItem {
@@ -157,6 +157,7 @@ declare namespace Api {
       username: string
       password: string
       status: TemuStatus
+      reason?: string
     }
 
     /** TEMU搜索参数 */
