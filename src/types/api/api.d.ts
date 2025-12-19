@@ -157,7 +157,7 @@ declare namespace Api {
       username: string
       password: string
       status: TemuStatus
-      reason?: string
+      reason?: any
     }
 
     /** TEMU搜索参数 */
