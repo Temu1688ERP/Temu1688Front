@@ -148,6 +148,9 @@ declare namespace Api {
     /** TEMU状态 */
     type TemuStatus = 'waiting' | 'processing' | 'normal' | 'offline' | 'exception' | 'unknown'
 
+    /** TEMU类型 */
+    type TemuType = 'self' | 'agent'
+
     /** TEMU列表项 */
     interface TemuListItem {
       id: number
@@ -157,6 +160,9 @@ declare namespace Api {
       username: string
       password: string
       status: TemuStatus
+      type: TemuType
+      principal: string
+      shop_name: string
       reason?: any
     }
 
@@ -168,6 +174,9 @@ declare namespace Api {
       id?: number
       username: string
       password: string
+      type: TemuType
+      principal: string
+      shop_name?: string
       status?: TemuStatus
     }
   }

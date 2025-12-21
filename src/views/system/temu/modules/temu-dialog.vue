@@ -17,6 +17,18 @@
           show-password
         />
       </ElFormItem>
+      <ElFormItem label="类型" prop="type">
+        <ElSelect v-model="formData.type" placeholder="请选择类型" style="width: 100%">
+          <ElOption label="自营" value="self" />
+          <ElOption label="代运营" value="agent" />
+        </ElSelect>
+      </ElFormItem>
+      <ElFormItem label="主体名称" prop="principal">
+        <ElInput v-model="formData.principal" placeholder="请输入主体名称" />
+      </ElFormItem>
+      <ElFormItem label="店铺名称" prop="shop_name">
+        <ElInput v-model="formData.shop_name" placeholder="请输入店铺名称" />
+      </ElFormItem>
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
@@ -61,7 +73,10 @@
   const formData = reactive({
     id: undefined as number | undefined,
     username: '',
-    password: ''
+    password: '',
+    type: '' as Api.SystemManage.TemuType | '',
+    principal: '',
+    shop_name: ''
   })
 
   // 表单验证规则
@@ -76,7 +91,9 @@
             { required: true, message: '请输入密码', trigger: 'blur' },
             { min: 6, max: 50, message: '长度在 6 到 50 个字符', trigger: 'blur' }
           ]
-        : [{ min: 6, max: 50, message: '长度在 6 到 50 个字符', trigger: 'blur' }]
+        : [{ min: 6, max: 50, message: '长度在 6 到 50 个字符', trigger: 'blur' }],
+    type: [{ required: true, message: '请选择类型', trigger: 'change' }],
+    principal: [{ required: true, message: '请输入主体名称', trigger: 'blur' }]
   }))
 
   /**
@@ -90,7 +107,10 @@
     Object.assign(formData, {
       id: isEdit && row ? row.id : undefined,
       username: isEdit && row ? row.username || '' : '',
-      password: ''
+      password: '',
+      type: isEdit && row ? row.type || '' : '',
+      principal: isEdit && row ? row.principal || '' : '',
+      shop_name: isEdit && row ? row.shop_name || '' : ''
     })
   }
 
@@ -125,13 +145,19 @@
           if (dialogType.value === 'add') {
             await fetchCreateTemu({
               username: formData.username,
-              password: formData.password
+              password: formData.password,
+              type: formData.type as Api.SystemManage.TemuType,
+              principal: formData.principal,
+              shop_name: formData.shop_name
             })
           } else {
             await fetchUpdateTemu({
               id: formData.id,
               username: formData.username,
-              password: formData.password
+              password: formData.password,
+              type: formData.type as Api.SystemManage.TemuType,
+              principal: formData.principal,
+              shop_name: formData.shop_name
             })
           }
           ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')

@@ -49,6 +49,13 @@
 
   type TemuListItem = Api.SystemManage.TemuListItem
   type TemuStatus = Api.SystemManage.TemuStatus
+  type TemuType = Api.SystemManage.TemuType
+
+  // 类型映射
+  const typeMap: Record<TemuType, { label: string; type: 'primary' | 'success' }> = {
+    self: { label: '自营', type: 'primary' },
+    agent: { label: '代运营', type: 'success' }
+  }
 
   // 状态映射
   const statusMap: Record<
@@ -98,6 +105,17 @@
       columnsFactory: () => [
         { prop: 'id', label: 'ID', width: 80 },
         { prop: 'username', label: '用户名' },
+        {
+          prop: 'type',
+          label: '类型',
+          width: 100,
+          formatter: (row: TemuListItem) => {
+            const typeInfo = typeMap[row.type] || { label: '未知', type: 'info' }
+            return h(ElTag, { type: typeInfo.type }, () => typeInfo.label)
+          }
+        },
+        { prop: 'principal', label: '主体名称', minWidth: 120 },
+        { prop: 'shop_name', label: '店铺名称', minWidth: 120 },
         {
           prop: 'status',
           label: '状态',
