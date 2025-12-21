@@ -176,7 +176,6 @@ declare namespace Api {
       password: string
       type: TemuType
       principal: string
-      shop_name?: string
       status?: TemuStatus
     }
   }

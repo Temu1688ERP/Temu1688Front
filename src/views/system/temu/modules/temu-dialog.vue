@@ -26,9 +26,6 @@
       <ElFormItem label="主体名称" prop="principal">
         <ElInput v-model="formData.principal" placeholder="请输入主体名称" />
       </ElFormItem>
-      <ElFormItem label="店铺名称" prop="shop_name">
-        <ElInput v-model="formData.shop_name" placeholder="请输入店铺名称" />
-      </ElFormItem>
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
@@ -75,8 +72,7 @@
     username: '',
     password: '',
     type: '' as Api.SystemManage.TemuType | '',
-    principal: '',
-    shop_name: ''
+    principal: ''
   })
 
   // 表单验证规则
@@ -109,8 +105,7 @@
       username: isEdit && row ? row.username || '' : '',
       password: '',
       type: isEdit && row ? row.type || '' : '',
-      principal: isEdit && row ? row.principal || '' : '',
-      shop_name: isEdit && row ? row.shop_name || '' : ''
+      principal: isEdit && row ? row.principal || '' : ''
     })
   }
 
@@ -147,8 +142,7 @@
               username: formData.username,
               password: formData.password,
               type: formData.type as Api.SystemManage.TemuType,
-              principal: formData.principal,
-              shop_name: formData.shop_name
+              principal: formData.principal
             })
           } else {
             await fetchUpdateTemu({
@@ -156,8 +150,7 @@
               username: formData.username,
               password: formData.password,
               type: formData.type as Api.SystemManage.TemuType,
-              principal: formData.principal,
-              shop_name: formData.shop_name
+              principal: formData.principal
             })
           }
           ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
