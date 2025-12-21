@@ -35,17 +35,24 @@
   // 表单配置
   const formItems = computed(() => [
     {
-      label: 'SKU',
-      key: 'sku',
+      label: '商品ID',
+      key: 'id',
       type: 'input',
-      placeholder: '请输入SKU',
+      placeholder: '请输入商品ID',
       clearable: true
     },
     {
-      label: 'SPU',
-      key: 'spu',
+      label: 'SKCID',
+      key: 'skcId',
       type: 'input',
-      placeholder: '请输入SPU',
+      placeholder: '请输入SKCID',
+      clearable: true
+    },
+    {
+      label: 'SKUID',
+      key: 'skuId',
+      type: 'input',
+      placeholder: '请输入SKUID',
       clearable: true
     },
     {
@@ -56,17 +63,10 @@
       clearable: true
     },
     {
-      label: '分类',
-      key: 'category',
+      label: '类型',
+      key: 'type',
       type: 'input',
-      placeholder: '请输入分类',
-      clearable: true
-    },
-    {
-      label: '品牌',
-      key: 'brand',
-      type: 'input',
-      placeholder: '请输入品牌',
+      placeholder: '请输入类型',
       clearable: true
     },
     {

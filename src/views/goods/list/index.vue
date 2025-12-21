@@ -30,7 +30,7 @@
   import { useTable } from '@/hooks/core/useTable'
   import { fetchGetGoodsList } from '@/api/goods'
   import GoodsSearch from './modules/goods-search.vue'
-  import { ElImage, ElTag } from 'element-plus'
+  import { ElTag } from 'element-plus'
 
   defineOptions({ name: 'GoodsList' })
 
@@ -47,11 +47,11 @@
 
   // 搜索表单
   const searchForm = ref({
-    sku: undefined,
-    spu: undefined,
+    id: undefined,
+    skcId: undefined,
+    skuId: undefined,
     name: undefined,
-    category: undefined,
-    brand: undefined,
+    type: undefined,
     status: undefined
   })
 
@@ -75,32 +75,13 @@
         ...searchForm.value
       },
       columnsFactory: () => [
-        { prop: 'sku', label: 'SKU', width: 120 },
-        { prop: 'spu', label: 'SPU', width: 120 },
+        { prop: 'id', label: '商品ID', width: 100 },
+        { prop: 'skcId', label: 'SKCID', width: 120 },
+        { prop: 'skuId', label: 'SKUID', width: 120 },
         { prop: 'name', label: '商品名称', minWidth: 200 },
-        {
-          prop: 'image',
-          label: '商品图片',
-          width: 100,
-          formatter: (row: GoodsListItem) =>
-            h(ElImage, {
-              src: row.image,
-              style: { width: '60px', height: '60px' },
-              fit: 'cover',
-              previewSrcList: [row.image],
-              lazy: true
-            })
-        },
-        {
-          prop: 'price',
-          label: '价格',
-          width: 100,
-          formatter: (row: GoodsListItem) => `¥${row.price.toFixed(2)}`
-        },
+        { prop: 'attribute', label: '属性', width: 120 },
+        { prop: 'type', label: '类型', width: 100 },
         { prop: 'stock', label: '库存', width: 80 },
-        { prop: 'category', label: '分类', width: 100 },
-        { prop: 'brand', label: '品牌', width: 100 },
-        { prop: 'spec', label: '规格', width: 120 },
         {
           prop: 'status',
           label: '状态',
@@ -109,7 +90,8 @@
             const status = statusMap[row.status] || { label: '未知', type: 'info' as const }
             return h(ElTag, { type: status.type }, () => status.label)
           }
-        }
+        },
+        { prop: 'updateTime', label: '最后更新时间', width: 160 }
       ]
     }
   })
