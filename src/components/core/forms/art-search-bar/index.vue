@@ -71,9 +71,6 @@
         <ElCol :xs="24" :sm="24" :md="span" :lg="span" :xl="span" class="action-column">
           <div class="action-buttons-wrapper" :style="actionButtonsStyle">
             <div class="form-buttons">
-              <ElButton v-if="showReset" class="reset-button" @click="handleReset" v-ripple>
-                重置
-              </ElButton>
               <ElButton
                 v-if="showSearch"
                 type="primary"
@@ -83,6 +80,9 @@
                 :disabled="disabledSearch"
               >
                 查询
+              </ElButton>
+              <ElButton v-if="showReset" class="reset-button" @click="handleReset" v-ripple>
+                重置
               </ElButton>
             </div>
             <div v-if="shouldShowExpandToggle" class="filter-toggle" @click="toggleExpand">

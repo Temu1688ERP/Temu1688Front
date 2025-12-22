@@ -185,8 +185,15 @@ declare namespace Api {
     /** 商品列表 */
     type GoodsList = GoodsListItem[]
 
-    /** 商品状态 */
-    type GoodsStatus = 'on_sale' | 'off_sale' | 'out_of_stock'
+    /** SKU规格 */
+    interface SkuSpecList {
+      [key: string]: string
+    }
+
+    /** 商品属性 */
+    interface GoodsProperties {
+      [key: string]: string
+    }
 
     /** 商品列表项 */
     interface GoodsListItem {
@@ -194,22 +201,29 @@ declare namespace Api {
       created_at: string
       updated_at: string
       deleted_at: string | null
-      sku: string
-      spu: string
-      name: string
-      image: string
-      price: number
-      stock: number
-      category: string
-      brand: string
-      spec: string
-      status: GoodsStatus
+      account_id: number
+      goods_title: string
+      goods_id: string
+      product_id: string
+      skc_id: string
+      sku_id: string
+      goods_image: string
+      goods_cat: string
+      sku_image: string
+      sku_spec_list: SkuSpecList
+      properties: GoodsProperties
+      categories: string[]
+      price: string
+      search: string
     }
 
     /** 商品搜索参数 */
-    type GoodsSearchParams = Partial<
-      Pick<GoodsListItem, 'sku' | 'spu' | 'name' | 'category' | 'brand' | 'status'>
-    >
+    type GoodsSearchParams = Partial<{
+      keywords: string
+      account_id: number
+      page: string
+      page_size: string
+    }>
   }
 
   /** 订单管理类型 */

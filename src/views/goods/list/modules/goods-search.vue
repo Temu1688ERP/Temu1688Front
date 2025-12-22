@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+  import { fetchGetTemuList } from '@/api/system-manage'
+
   interface Props {
     modelValue: Record<string, any>
   }
@@ -29,57 +31,46 @@
     set: (val) => emit('update:modelValue', val)
   })
 
+  // 账号列表
+  const accountOptions = ref<{ label: string; value: number }[]>([])
+
+  // 获取账号列表
+  const getAccountList = async () => {
+    try {
+      const res = await fetchGetTemuList({})
+      accountOptions.value = (res || []).map((item) => ({
+        label: item.username,
+        value: item.id
+      }))
+    } catch (error) {
+      console.error('获取账号列表失败:', error)
+    }
+  }
+
+  // 初始化获取账号列表
+  onMounted(() => {
+    getAccountList()
+  })
+
   // 校验规则
   const rules = {}
 
   // 表单配置
   const formItems = computed(() => [
     {
-      label: '商品ID',
-      key: 'id',
-      type: 'input',
-      placeholder: '请输入商品ID',
-      clearable: true
-    },
-    {
-      label: 'SKCID',
-      key: 'skcId',
-      type: 'input',
-      placeholder: '请输入SKCID',
-      clearable: true
-    },
-    {
-      label: 'SKUID',
-      key: 'skuId',
-      type: 'input',
-      placeholder: '请输入SKUID',
-      clearable: true
-    },
-    {
-      label: '商品名称',
-      key: 'name',
-      type: 'input',
-      placeholder: '请输入商品名称',
-      clearable: true
-    },
-    {
-      label: '类型',
-      key: 'type',
-      type: 'input',
-      placeholder: '请输入类型',
-      clearable: true
-    },
-    {
-      label: '状态',
-      key: 'status',
+      label: '账号',
+      key: 'account_id',
       type: 'select',
-      placeholder: '请选择状态',
+      placeholder: '请选择账号',
       clearable: true,
-      options: [
-        { label: '在售', value: 'on_sale' },
-        { label: '下架', value: 'off_sale' },
-        { label: '缺货', value: 'out_of_stock' }
-      ]
+      options: accountOptions.value
+    },
+    {
+      label: '关键词',
+      key: 'keywords',
+      type: 'input',
+      placeholder: '请输入商品ID/SKU/名称等关键词',
+      clearable: true
     }
   ])
 

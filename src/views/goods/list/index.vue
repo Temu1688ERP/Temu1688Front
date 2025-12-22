@@ -30,30 +30,90 @@
   import { useTable } from '@/hooks/core/useTable'
   import { fetchGetGoodsList } from '@/api/goods'
   import GoodsSearch from './modules/goods-search.vue'
-  import { ElTag } from 'element-plus'
+  import { ElImage, ElTooltip } from 'element-plus'
 
   defineOptions({ name: 'GoodsList' })
 
   type GoodsListItem = Api.Goods.GoodsListItem
-  type GoodsStatus = Api.Goods.GoodsStatus
-
-  // 状态映射
-  const statusMap: Record<GoodsStatus, { label: string; type: 'success' | 'danger' | 'warning' }> =
-    {
-      on_sale: { label: '在售', type: 'success' },
-      off_sale: { label: '下架', type: 'danger' },
-      out_of_stock: { label: '缺货', type: 'warning' }
-    }
 
   // 搜索表单
   const searchForm = ref({
-    id: undefined,
-    skcId: undefined,
-    skuId: undefined,
-    name: undefined,
-    type: undefined,
-    status: undefined
+    keywords: undefined,
+    account_id: undefined
   })
+
+  // 格式化键值对列表（一行一个）
+  const formatKeyValueList = (obj: Record<string, string>) => {
+    const entries = Object.entries(obj)
+    if (entries.length === 0) return ''
+    return entries.map(([key, value]) => h('div', `${key}：${value}`))
+  }
+
+  // 格式化分类列表（顿号分隔）
+  const formatCategories = (categories: string[]) => {
+    return categories.join('、')
+  }
+
+  // 格式化ID信息（一行一个）
+  const formatIdInfo = (row: GoodsListItem) => {
+    return [
+      h('div', `商品：${row.goods_id}`),
+      h('div', `产品：${row.product_id}`),
+      h('div', `SKC：${row.skc_id}`),
+      h('div', `SKU：${row.sku_id}`)
+    ]
+  }
+
+  // 格式化商品信息（图片+名称+分类+价格）
+  const formatGoodsInfo = (row: GoodsListItem) => {
+    return h('div', { style: { display: 'flex', alignItems: 'center', gap: '12px' } }, [
+      // 图片
+      h(ElImage, {
+        src: row.goods_image,
+        style: { width: '60px', height: '60px', flexShrink: 0, borderRadius: '6px' },
+        fit: 'cover',
+        previewSrcList: [row.goods_image],
+        previewTeleported: true,
+        referrerpolicy: 'no-referrer'
+      }),
+      // 文字信息
+      h('div', { style: { flex: 1, overflow: 'hidden' } }, [
+        h(
+          ElTooltip,
+          {
+            content: row.goods_title,
+            placement: 'top',
+            showAfter: 300
+          },
+          () =>
+            h(
+              'div',
+              {
+                style: {
+                  fontWeight: 500,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer'
+                }
+              },
+              row.goods_title
+            )
+        ),
+        h(
+          'div',
+          {
+            style: { color: '#909399', fontSize: '12px', marginTop: '4px' }
+          },
+          [
+            h('span', row.goods_cat),
+            h('span', { style: { margin: '0 8px' } }, '|'),
+            h('span', { style: { color: '#f56c6c' } }, `¥${row.price}`)
+          ]
+        )
+      ])
+    ])
+  }
 
   const {
     columns,
@@ -74,24 +134,53 @@
       apiParams: {
         ...searchForm.value
       },
+      paginationKey: {
+        current: 'page',
+        size: 'page_size'
+      },
       columnsFactory: () => [
-        { prop: 'id', label: '商品ID', width: 100 },
-        { prop: 'skcId', label: 'SKCID', width: 120 },
-        { prop: 'skuId', label: 'SKUID', width: 120 },
-        { prop: 'name', label: '商品名称', minWidth: 200 },
-        { prop: 'attribute', label: '属性', width: 120 },
-        { prop: 'type', label: '类型', width: 100 },
-        { prop: 'stock', label: '库存', width: 80 },
+        // ========== 基础信息（合并） ==========
+        { prop: 'id', label: 'ID', width: 80 },
         {
-          prop: 'status',
-          label: '状态',
-          width: 80,
-          formatter: (row: GoodsListItem) => {
-            const status = statusMap[row.status] || { label: '未知', type: 'info' as const }
-            return h(ElTag, { type: status.type }, () => status.label)
-          }
+          prop: 'goods_info',
+          label: '商品信息',
+          minWidth: 300,
+          formatter: (row: GoodsListItem) => formatGoodsInfo(row)
         },
-        { prop: 'updateTime', label: '最后更新时间', width: 160 }
+
+        // ========== ID标识（合并） ==========
+        {
+          prop: 'ids',
+          label: 'ID信息',
+          width: 200,
+          formatter: (row: GoodsListItem) => formatIdInfo(row)
+        },
+
+        // ========== 规格属性 ==========
+        {
+          prop: 'sku_spec_list',
+          label: 'SKU规格',
+          width: 150,
+          formatter: (row: GoodsListItem) => formatKeyValueList(row.sku_spec_list)
+        },
+        {
+          prop: 'properties',
+          label: '商品属性',
+          width: 200,
+          formatter: (row: GoodsListItem) => formatKeyValueList(row.properties)
+        },
+
+        // ========== 分类路径 ==========
+        {
+          prop: 'categories',
+          label: '分类路径',
+          minWidth: 250,
+          formatter: (row: GoodsListItem) => formatCategories(row.categories),
+          showOverflowTooltip: true
+        },
+
+        // ========== 时间 ==========
+        { prop: 'updated_at', label: '更新时间', width: 160 }
       ]
     }
   })
