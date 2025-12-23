@@ -5,7 +5,7 @@ export const orderRoutes: AppRouteRecord = {
   name: 'Order',
   component: '/index/index',
   meta: {
-    title: '订单管理',
+    title: '进销存',
     icon: 'ri:file-list-3-line',
     roles: ['R_SUPER', 'R_ADMIN']
   },

@@ -42,6 +42,8 @@
     name: string
     total_count: number
     prepared_count: number
+    receivable_amount: number // 应收金额
+    actual_amount: number // 实际收金额
     created_at: string
     updated_at: string
   }
@@ -66,6 +68,8 @@
       name: '批次1',
       total_count: 100,
       prepared_count: 80,
+      receivable_amount: 5000.0,
+      actual_amount: 4800.0,
       created_at: '2024-12-20 10:30:00',
       updated_at: '2024-12-20 15:30:00'
     },
@@ -75,6 +79,8 @@
       name: '批次2',
       total_count: 50,
       prepared_count: 50,
+      receivable_amount: 2500.0,
+      actual_amount: 2500.0,
       created_at: '2024-12-19 14:20:00',
       updated_at: '2024-12-19 18:20:00'
     },
@@ -84,6 +90,8 @@
       name: '批次3',
       total_count: 200,
       prepared_count: 120,
+      receivable_amount: 10000.0,
+      actual_amount: 6000.0,
       created_at: '2024-12-18 09:15:00',
       updated_at: '2024-12-18 16:15:00'
     },
@@ -93,6 +101,8 @@
       name: '批次1',
       total_count: 80,
       prepared_count: 60,
+      receivable_amount: 4000.0,
+      actual_amount: 3000.0,
       created_at: '2024-12-21 11:00:00',
       updated_at: '2024-12-21 14:00:00'
     },
@@ -102,6 +112,8 @@
       name: '批次2',
       total_count: 150,
       prepared_count: 150,
+      receivable_amount: 7500.0,
+      actual_amount: 7500.0,
       created_at: '2024-12-20 16:45:00',
       updated_at: '2024-12-20 20:45:00'
     },
@@ -111,6 +123,8 @@
       name: '批次1',
       total_count: 30,
       prepared_count: 10,
+      receivable_amount: 1500.0,
+      actual_amount: 500.0,
       created_at: '2024-12-22 08:30:00',
       updated_at: '2024-12-22 09:30:00'
     }
@@ -150,9 +164,12 @@
         ...searchForm.value
       },
       columnsFactory: () => [
+        { prop: 'id', label: 'ID', minWidth: 50 },
         { prop: 'name', label: '批次', minWidth: 150 },
         { prop: 'total_count', label: '备货总数', width: 100 },
         { prop: 'prepared_count', label: '已备货数', width: 100 },
+        { prop: 'receivable_amount', label: '应收金额', width: 120 },
+        { prop: 'actual_amount', label: '实收金额', width: 120 },
         { prop: 'updated_at', label: '更新时间', width: 180 },
         {
           prop: 'operation',
