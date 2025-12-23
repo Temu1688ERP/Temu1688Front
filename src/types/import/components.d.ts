@@ -103,6 +103,8 @@ declare module 'vue' {
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    ElTabPane: typeof import('element-plus/es')['ElTabPane']
+    ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElWatermark: typeof import('element-plus/es')['ElWatermark']
     HorizontalSubmenu: typeof import('./../../components/core/layouts/art-menus/art-horizontal-menu/widget/HorizontalSubmenu.vue')['default']

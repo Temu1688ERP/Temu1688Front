@@ -15,7 +15,7 @@ export const orderRoutes: AppRouteRecord = {
       name: 'OrderList',
       component: '/order/list',
       meta: {
-        title: '订单列表',
+        title: '备货单',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }

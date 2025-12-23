@@ -13,6 +13,7 @@
 <script setup lang="ts">
   interface Props {
     modelValue: Record<string, any>
+    accountOptions: { label: string; value: number }[]
   }
   interface Emits {
     (e: 'update:modelValue', value: Record<string, any>): void
@@ -35,46 +36,12 @@
   // 表单配置
   const formItems = computed(() => [
     {
-      label: '订单号',
-      key: 'order_no',
-      type: 'input',
-      placeholder: '请输入订单号',
-      clearable: true
-    },
-    {
-      label: 'SKU',
-      key: 'sku',
-      type: 'input',
-      placeholder: '请输入SKU',
-      clearable: true
-    },
-    {
-      label: '商品名称',
-      key: 'goods_name',
-      type: 'input',
-      placeholder: '请输入商品名称',
-      clearable: true
-    },
-    {
-      label: '买家',
-      key: 'buyer',
-      type: 'input',
-      placeholder: '请输入买家',
-      clearable: true
-    },
-    {
-      label: '状态',
-      key: 'status',
+      label: '账号',
+      key: 'account_id',
       type: 'select',
-      placeholder: '请选择状态',
+      placeholder: '请选择账号',
       clearable: true,
-      options: [
-        { label: '待付款', value: 'pending' },
-        { label: '已付款', value: 'paid' },
-        { label: '已发货', value: 'shipped' },
-        { label: '已签收', value: 'delivered' },
-        { label: '已取消', value: 'cancelled' }
-      ]
+      options: props.accountOptions
     }
   ])
 
