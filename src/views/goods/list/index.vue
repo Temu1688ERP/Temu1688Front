@@ -178,6 +178,12 @@
           formatter: (row: GoodsListItem) => formatCategories(row.categories),
           showOverflowTooltip: true
         },
+        {
+          prop: 'account',
+          label: '账号',
+          width: 120,
+          formatter: (row: GoodsListItem) => row.account?.username || '-'
+        },
 
         // ========== 时间 ==========
         { prop: 'updated_at', label: '更新时间', width: 160 }

@@ -195,6 +195,11 @@ declare namespace Api {
       [key: string]: string
     }
 
+    /** 商品关联账号 */
+    interface GoodsAccount {
+      username: string
+    }
+
     /** 商品列表项 */
     interface GoodsListItem {
       id: number
@@ -202,6 +207,7 @@ declare namespace Api {
       updated_at: string
       deleted_at: string | null
       account_id: number
+      account?: GoodsAccount
       goods_title: string
       goods_id: string
       product_id: string
