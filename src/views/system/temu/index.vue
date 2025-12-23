@@ -128,9 +128,7 @@
         {
           prop: 'reason',
           label: '异常原因',
-          minWidth: 160,
-          formatter: (row: TemuListItem) =>
-            row.status === 'exception' ? row.reason?.String || '-' : '-'
+          minWidth: 160
         },
         { prop: 'created_at', label: '创建时间', sortable: true },
         { prop: 'updated_at', label: '更新时间', sortable: true },
