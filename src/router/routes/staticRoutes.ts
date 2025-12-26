@@ -42,6 +42,13 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     component: () => import('@views/exception/500/index.vue'),
     meta: { title: '500', isHideTab: true }
   },
+  // 供货商批次预览页面（不需要登录，无导航栏）
+  {
+    path: '/share/batch',
+    name: 'ShareBatch',
+    component: () => import('@views/share/batch/index.vue'),
+    meta: { title: '批次预览', isHideTab: true }
+  },
   {
     path: '/outside',
     component: () => import('@views/index/index.vue'),
