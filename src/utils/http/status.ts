@@ -3,6 +3,7 @@
  */
 export enum ApiStatus {
   success = 0, // 成功
+  successOk = 200, // 成功（HTTP 200）
   error = 400, // 错误
   unauthorized = 401, // 未授权
   forbidden = 403, // 禁止访问

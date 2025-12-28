@@ -6,7 +6,7 @@
           <ElIcon :size="32"><Iphone /></ElIcon>
         </div>
         <h2 class="verify-title">供货商批次查询</h2>
-        <p class="verify-desc">请输入您的手机号以查看批次信息</p>
+        <p class="verify-desc">请输入您的手机号和密码以查看批次信息</p>
       </div>
       <ElForm ref="formRef" :model="formData" :rules="rules" @submit.prevent="handleSubmit">
         <ElFormItem prop="phone">
@@ -14,6 +14,17 @@
             v-model="formData.phone"
             placeholder="请输入手机号"
             maxlength="11"
+            clearable
+            size="large"
+            class="phone-input"
+          />
+        </ElFormItem>
+        <ElFormItem prop="password">
+          <ElInput
+            v-model="formData.password"
+            type="password"
+            placeholder="请输入密码"
+            show-password
             clearable
             size="large"
             class="phone-input"
@@ -42,6 +53,9 @@
   import { ref, reactive } from 'vue'
   import { Iphone } from '@element-plus/icons-vue'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { fetchCustomerToken } from '@/api/customer'
+
+  const CUSTOMER_TOKEN_KEY = 'customer_receipt_token'
 
   defineOptions({
     name: 'PhoneVerify'
@@ -55,7 +69,8 @@
   const loading = ref(false)
 
   const formData = reactive({
-    phone: ''
+    phone: '',
+    password: ''
   })
 
   const validatePhone = (_rule: any, value: string, callback: any) => {
@@ -69,7 +84,8 @@
   }
 
   const rules: FormRules = {
-    phone: [{ validator: validatePhone, trigger: 'blur' }]
+    phone: [{ validator: validatePhone, trigger: 'blur' }],
+    password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
   }
 
   const handleSubmit = async () => {
@@ -78,6 +94,11 @@
 
     loading.value = true
     try {
+      const res = await fetchCustomerToken({
+        mobile: formData.phone,
+        password: formData.password
+      })
+      sessionStorage.setItem(CUSTOMER_TOKEN_KEY, res.token)
       emit('verified', formData.phone)
     } finally {
       loading.value = false

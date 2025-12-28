@@ -1,17 +1,12 @@
 <template>
   <PhoneVerify v-if="!isVerified" @verified="handleVerified" />
-  <div v-else class="share-batch">
-    <div class="batch-container">
-      <h1 class="batch-title">批次预览</h1>
-      <p class="batch-phone">当前手机号：{{ phone }}</p>
-      <!-- 在这里添加批次预览内容 -->
-    </div>
-  </div>
+  <BatchPreview v-else :phone="phone" />
 </template>
 
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted } from 'vue'
   import PhoneVerify from './components/PhoneVerify.vue'
+  import BatchPreview from './components/BatchPreview.vue'
 
   defineOptions({
     name: 'ShareBatch'
@@ -41,36 +36,3 @@
     isVerified.value = true
   }
 </script>
-
-<style scoped lang="scss">
-  .share-batch {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    width: 100vw;
-    min-height: 100vh;
-    padding: 40px 20px;
-    background-color: #f5f7fa;
-  }
-
-  .batch-container {
-    width: 100%;
-    max-width: 1200px;
-    padding: 24px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgb(0 0 0 / 10%);
-  }
-
-  .batch-title {
-    margin-bottom: 16px;
-    font-size: 24px;
-    font-weight: 600;
-    color: #303133;
-  }
-
-  .batch-phone {
-    font-size: 14px;
-    color: #909399;
-  }
-</style>

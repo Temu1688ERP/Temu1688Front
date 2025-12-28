@@ -73,6 +73,10 @@ axiosInstance.interceptors.request.use(
     const { accessToken } = useUserStore()
     if (accessToken) request.headers.set('Authorization', accessToken)
 
+    // 供货商 token（sessionStorage）
+    const customerToken = sessionStorage.getItem('customer_receipt_token')
+    if (customerToken) request.headers.set('Token', customerToken)
+
     if (request.data && !(request.data instanceof FormData) && !request.headers['Content-Type']) {
       request.headers.set('Content-Type', 'application/json')
       request.data = JSON.stringify(request.data)
@@ -90,7 +94,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse<BaseResponse>) => {
     const { code, msg } = response.data
-    if (code === ApiStatus.success) return response
+    if (code === ApiStatus.success || code === ApiStatus.successOk) return response
     if (isLoginInvalidCode(code)) handleUnauthorizedError(msg)
     throw createHttpError(msg || httpMsg.requestFailed, code)
   },
