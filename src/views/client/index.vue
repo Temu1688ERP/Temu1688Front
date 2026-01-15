@@ -9,7 +9,7 @@
   import BatchPreview from './components/BatchPreview.vue'
 
   defineOptions({
-    name: 'ShareBatch'
+    name: 'Client'
   })
 
   const isVerified = ref(false)

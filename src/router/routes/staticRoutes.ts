@@ -44,9 +44,9 @@ export const staticRoutes: AppRouteRecordRaw[] = [
   },
   // 供货商批次预览页面（不需要登录，无导航栏）
   {
-    path: '/share/batch',
-    name: 'ShareBatch',
-    component: () => import('@views/share/batch/index.vue'),
+    path: '/client',
+    name: 'Client',
+    component: () => import('@views/client/index.vue'),
     meta: { title: '批次预览', isHideTab: true }
   },
   {
