@@ -1,0 +1,1559 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Temu Server API",
+    "description": "## 系统说明\n\n本系统分为两个独立的子系统，**Token 不互通**：\n\n| 系统 | Token 获取接口 | 使用场景 |\n|------|----------------|----------|\n| **系统管理后台** | `POST /user/login` | 系统管理员管理用户、角色、权限、Temu账号、全局批次 |\n| **客户后台（商家）** | `POST /customer/receipt/get_token` | Temu 商家查看/管理自己的批次和付款记录 |\n\n---\n\n### 测试账号\n\n| 系统 | 用户名/手机号 | 密码 |\n|------|---------------|------|\n| 系统管理后台 | admin | admin |\n| 客户后台 | 13800138001 | 123456 |\n\n---\n\n### 认证说明\n\n- **系统管理后台**：请求头携带 `Authorization: Bearer <token>`（JWT）\n- **客户后台**：请求头携带 `Token: <token>`（Base64编码的 TemuAccount.id）",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8086",
+      "description": "本地开发环境"
+    }
+  ],
+  "tags": [
+    {
+      "name": "admin-auth",
+      "description": "【系统管理后台】用户认证 - Token 来源: POST /user/login"
+    },
+    {
+      "name": "admin-users",
+      "description": "【系统管理后台】用户管理 - Token 来源: POST /user/login"
+    },
+    {
+      "name": "admin-roles",
+      "description": "【系统管理后台】角色管理 - Token 来源: POST /user/login"
+    },
+    {
+      "name": "admin-permissions",
+      "description": "【系统管理后台】权限管理 - Token 来源: POST /user/login"
+    },
+    {
+      "name": "admin-temu-accounts",
+      "description": "【系统管理后台】Temu 账号管理 - Token 来源: POST /user/login"
+    },
+    {
+      "name": "admin-goods",
+      "description": "【系统管理后台】商品管理 - Token 来源: POST /user/login"
+    },
+    {
+      "name": "admin-receipt",
+      "description": "【系统管理后台】批次管理 - Token 来源: POST /user/login - 可查看/审核所有商家的批次"
+    },
+    {
+      "name": "customer-auth",
+      "description": "【客户后台】商家认证 - Token 来源: POST /customer/receipt/get_token"
+    },
+    {
+      "name": "customer-receipt",
+      "description": "【客户后台】商家批次管理 - Token 来源: POST /customer/receipt/get_token - 仅能查看和管理自己的数据"
+    }
+  ],
+  "paths": {
+    "/user/login": {
+      "post": {
+        "tags": ["admin-auth"],
+        "summary": "【系统管理后台】管理员登录",
+        "description": "系统管理员登录，获取 JWT Token\n\n**Token 来源**: 无需 Token",
+        "x-token-source": "无需 Token（这是获取 Token 的接口）",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/logout": {
+      "post": {
+        "tags": ["admin-auth"],
+        "summary": "【系统管理后台】退出登录",
+        "description": "管理员退出登录\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "退出成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/profile": {
+      "get": {
+        "tags": ["admin-auth"],
+        "summary": "【系统管理后台】获取用户信息",
+        "description": "获取当前登录的管理员信息\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["admin-users"],
+        "summary": "【系统管理后台】用户列表",
+        "description": "获取系统用户列表\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["admin-users"],
+        "summary": "【系统管理后台】创建用户",
+        "description": "创建新用户（id=0 创建，id>0 更新）\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建/更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUserResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["admin-users"],
+        "summary": "【系统管理后台】删除用户",
+        "description": "删除指定用户\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "用户ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles": {
+      "get": {
+        "tags": ["admin-roles"],
+        "summary": "【系统管理后台】角色列表",
+        "description": "获取系统角色列表\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["admin-roles"],
+        "summary": "【系统管理后台】创建角色",
+        "description": "创建新角色（id=0 创建，id>0 更新）\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建/更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["admin-roles"],
+        "summary": "【系统管理后台】删除角色",
+        "description": "删除指定角色\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "角色ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/permissions": {
+      "get": {
+        "tags": ["admin-permissions"],
+        "summary": "【系统管理后台】权限列表",
+        "description": "获取系统权限列表\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["admin-permissions"],
+        "summary": "【系统管理后台】创建权限",
+        "description": "创建新权限（id=0 创建，id>0 更新）\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePermissionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建/更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["admin-permissions"],
+        "summary": "【系统管理后台】删除权限",
+        "description": "删除指定权限\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "权限ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/temu/accounts": {
+      "get": {
+        "tags": ["admin-temu-accounts"],
+        "summary": "【系统管理后台】Temu 账号列表",
+        "description": "获取所有 Temu 商家账号\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemuAccountListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["admin-temu-accounts"],
+        "summary": "【系统管理后台】添加 Temu 账号",
+        "description": "添加新的 Temu 商家账号\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTemuAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "添加成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemuAccountResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["admin-temu-accounts"],
+        "summary": "【系统管理后台】删除 Temu 账号",
+        "description": "删除指定 Temu 商家账号\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "Temu账号ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/temu/goods": {
+      "get": {
+        "tags": ["admin-goods"],
+        "summary": "【系统管理后台】商品列表",
+        "description": "获取所有 Temu 商品\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipt/select": {
+      "get": {
+        "tags": ["admin-receipt"],
+        "summary": "【系统管理后台】批次下拉选择",
+        "description": "获取批次列表（下拉选择用，可按状态/客户筛选）\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["pending", "paid", "cancelled"] },
+            "description": "状态筛选"
+          },
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "客户ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptSelectResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipt": {
+      "get": {
+        "tags": ["admin-receipt"],
+        "summary": "【系统管理后台】批次列表",
+        "description": "获取所有商家的批次列表（可按状态/客户筛选）\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 1 },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 10 },
+            "description": "每页数量"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["pending", "paid", "cancelled"] },
+            "description": "状态筛选"
+          },
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "客户ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReceiptListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipt/{id}": {
+      "get": {
+        "tags": ["admin-receipt"],
+        "summary": "【系统管理后台】批次详情",
+        "description": "获取指定批次的详细信息（包含付款记录）\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "批次ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReceiptDetailResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["admin-receipt"],
+        "summary": "【系统管理后台】删除批次",
+        "description": "删除指定批次（仅待付款状态可删除）\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "批次ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipt/{id}/approve": {
+      "post": {
+        "tags": ["admin-receipt"],
+        "summary": "【系统管理后台】审核通过",
+        "description": "审核付款记录通过\n\n**:id 为付款记录 ID，非批次 ID**\n\n会自动原子增加批次的已付金额，并根据金额自动更新批次状态（pending/paid）\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "付款记录 ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminApproveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "审核通过",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipt/{id}/reject": {
+      "post": {
+        "tags": ["admin-receipt"],
+        "summary": "【系统管理后台】审核拒绝",
+        "description": "审核付款记录拒绝\n\n**:id 为付款记录 ID，非批次 ID**\n\n拒绝后商家可以重新上传付款凭证\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "付款记录 ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminRejectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已拒绝",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipt/audit_logs": {
+      "get": {
+        "tags": ["admin-receipt"],
+        "summary": "【系统管理后台】审核历史",
+        "description": "获取付款记录的审核历史\n\n**查询参数（二选一）**:\n| 参数 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| payment_id | integer | 否 | 付款记录 ID（与 receipt_id 二选一）|\n| receipt_id | integer | 否 | 批次 ID（与 payment_id 二选一，返回该批次下所有付款记录的审核历史）|\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "payment_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "付款记录 ID（与 receipt_id 二选一）"
+          },
+          {
+            "name": "receipt_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "批次 ID（与 payment_id 二选一，返回该批次下所有付款记录的审核历史）"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/receipt/get_token": {
+      "post": {
+        "tags": ["customer-auth"],
+        "summary": "【客户后台】商家登录",
+        "description": "通过手机号和密码获取商家访问 Token\n\n**Token 来源**: 无需 Token（这是获取 Token 的接口）\n\n**请求参数**:\n| 参数 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| mobile | string | 是 | 手机号（默认: 13800138001）|\n| password | string | 是 | 密码（默认: 123456）|\n\n**返回的 Token 用途**: 后续请求需在 Header 携带 `Token: <token>`",
+        "x-token-source": "无需 Token（这是获取 Token 的接口）",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTokenResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/receipt/select": {
+      "get": {
+        "tags": ["customer-receipt"],
+        "summary": "【客户后台】我的批次列表",
+        "description": "获取当前商家的批次列表\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**注意**: 商家只能查看自己的批次",
+        "x-token-source": "POST /customer/receipt/get_token",
+        "security": [{ "customerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerReceiptListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/receipt/detail": {
+      "get": {
+        "tags": ["customer-receipt"],
+        "summary": "【客户后台】批次详情",
+        "description": "获取当前商家的批次详情（商品明细、批次信息、付款记录及审核历史）\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**注意**: 商家只能查看自己的批次详情\n\n**返回数据说明**:\n| 字段 | 说明 |\n|------|------|\n| data[].goods | 商品信息 |\n| data[].receipt | 批次基本信息（含付款记录） |\n| data[].receipt.payments[].audit_logs | 付款记录审核历史 |",
+        "x-token-source": "POST /customer/receipt/get_token",
+        "security": [{ "customerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "批次ID（必填）"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerReceiptDetailListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/receipt/ticket/upload": {
+      "post": {
+        "tags": ["customer-receipt"],
+        "summary": "【客户后台】上传付款凭证",
+        "description": "上传付款小票图片并创建付款记录\n\n**功能说明**：\n- 上传图片并自动转换为 JPEG 存储\n- 自动创建付款记录（状态=pending）\n- 自动验证批次归属权限\n\n**Token 来源**: POST /customer/receipt/get_token",
+        "x-token-source": "POST /customer/receipt/get_token",
+        "security": [{ "customerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "上传成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketUploadResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/receipt/payment/list": {
+      "get": {
+        "tags": ["customer-receipt"],
+        "summary": "【客户后台】付款记录列表",
+        "description": "获取当前商家的付款记录列表\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**查询参数（二选一）**:\n| 参数 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| id | integer | 否 | 付款记录ID（与 receipt_id 二选一）|\n| receipt_id | integer | 否 | 批次ID（与 id 二选一）|\n| status | string | 否 | 状态筛选：pending、rejected |\n\n**注意**: 商家只能查看自己的付款记录",
+        "x-token-source": "POST /customer/receipt/get_token",
+        "security": [{ "customerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "付款记录ID（与 receipt_id 二选一）"
+          },
+          {
+            "name": "receipt_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "批次ID（与 id 二选一）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["pending", "rejected"] },
+            "description": "状态筛选"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 1 },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 10 },
+            "description": "每页数量"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptPaymentListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/receipt/payment/{id}": {
+      "get": {
+        "tags": ["customer-receipt"],
+        "summary": "【客户后台】付款记录详情",
+        "description": "获取当前商家的指定付款记录详情\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**注意**: 商家只能查看自己的付款记录",
+        "x-token-source": "POST /customer/receipt/get_token",
+        "security": [{ "customerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "付款记录ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptPaymentDetailResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "customerAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Token"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string", "description": "用户名" },
+          "password": { "type": "string", "description": "密码" }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": { "type": "string", "description": "JWT Token" }
+            }
+          }
+        }
+      },
+      "UserProfileResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer", "description": "用户ID" },
+              "username": { "type": "string", "description": "用户名" },
+              "nickname": { "type": "string", "description": "昵称" },
+              "roles": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": { "id": { "type": "integer" }, "name": { "type": "string" } }
+                },
+                "description": "角色列表"
+              }
+            }
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "id": { "type": "integer", "description": "用户ID（id=0 创建，id>0 更新）" },
+          "username": { "type": "string", "description": "用户名" },
+          "password": { "type": "string", "description": "密码" },
+          "nickname": { "type": "string", "description": "昵称" },
+          "role_ids": {
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "角色ID列表"
+          }
+        }
+      },
+      "CreateUserResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer", "description": "用户ID" },
+              "username": { "type": "string", "description": "用户名" },
+              "nickname": { "type": "string", "description": "昵称" },
+              "role_ids": {
+                "type": "array",
+                "items": { "type": "integer" },
+                "description": "角色ID列表"
+              }
+            }
+          }
+        }
+      },
+      "UserListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer", "description": "用户ID" },
+                "username": { "type": "string", "description": "用户名" },
+                "nickname": { "type": "string", "description": "昵称" },
+                "role_ids": {
+                  "type": "array",
+                  "items": { "type": "integer" },
+                  "description": "角色ID列表"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CreateRoleRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "id": { "type": "integer", "description": "角色ID（id=0 创建，id>0 更新）" },
+          "name": { "type": "string", "description": "角色名称" },
+          "description": { "type": "string", "description": "角色描述" },
+          "permissions": {
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "权限ID列表"
+          }
+        }
+      },
+      "RoleResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer", "description": "角色ID" },
+              "name": { "type": "string", "description": "角色名称" },
+              "description": { "type": "string", "description": "角色描述" },
+              "permissions": {
+                "type": "array",
+                "items": { "type": "integer" },
+                "description": "权限ID列表"
+              }
+            }
+          }
+        }
+      },
+      "RoleListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer", "description": "角色ID" },
+                "name": { "type": "string", "description": "角色名称" },
+                "description": { "type": "string", "description": "角色描述" },
+                "permissions": {
+                  "type": "array",
+                  "items": { "type": "integer" },
+                  "description": "权限ID列表"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CreatePermissionRequest": {
+        "type": "object",
+        "required": ["name", "path"],
+        "properties": {
+          "id": { "type": "integer", "description": "权限ID（id=0 创建，id>0 更新）" },
+          "name": { "type": "string", "description": "权限名称" },
+          "path": { "type": "string", "description": "权限路径" },
+          "type": { "type": "string", "description": "权限类型" }
+        }
+      },
+      "PermissionResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer", "description": "权限ID" },
+              "name": { "type": "string", "description": "权限名称" },
+              "path": { "type": "string", "description": "权限路径" },
+              "type": { "type": "string", "description": "权限类型" }
+            }
+          }
+        }
+      },
+      "PermissionListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer", "description": "权限ID" },
+                "name": { "type": "string", "description": "权限名称" },
+                "path": { "type": "string", "description": "权限路径" },
+                "type": { "type": "string", "description": "权限类型" }
+              }
+            }
+          }
+        }
+      },
+      "AddTemuAccountRequest": {
+        "type": "object",
+        "required": ["mobile", "password"],
+        "properties": {
+          "mobile": { "type": "string", "description": "手机号" },
+          "password": { "type": "string", "description": "密码" },
+          "name": { "type": "string", "description": "商家名称" }
+        }
+      },
+      "TemuAccountResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer", "description": "账号ID" },
+              "mobile": { "type": "string", "description": "手机号" },
+              "name": { "type": "string", "description": "商家名称" }
+            }
+          }
+        }
+      },
+      "TemuAccountListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer", "description": "账号ID" },
+                "mobile": { "type": "string", "description": "手机号" },
+                "name": { "type": "string", "description": "商家名称" },
+                "created_at": { "type": "string", "description": "创建时间" }
+              }
+            }
+          }
+        }
+      },
+      "GoodsListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer", "description": "商品ID" },
+                "goods_id": { "type": "string", "description": "商品编号" },
+                "name": { "type": "string", "description": "商品名称" },
+                "price": { "type": "string", "description": "价格" }
+              }
+            }
+          }
+        }
+      },
+      "ReceiptResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer", "description": "批次ID" },
+              "customer_id": { "type": "integer", "description": "客户ID" },
+              "total_amount": { "type": "string", "description": "总金额" },
+              "paid_amount": { "type": "string", "description": "已付金额" },
+              "status": { "type": "string", "description": "状态" },
+              "remark": { "type": "string", "description": "备注" },
+              "created_at": { "type": "string", "description": "创建时间" }
+            }
+          }
+        }
+      },
+      "ReceiptSelectResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer", "description": "批次ID" },
+                "customer_id": { "type": "integer", "description": "客户ID" },
+                "customer_name": { "type": "string", "description": "客户名称" },
+                "total_amount": { "type": "string", "description": "总金额" },
+                "paid_amount": { "type": "string", "description": "已付金额" },
+                "status": { "type": "string", "description": "状态" },
+                "remark": { "type": "string", "description": "备注" },
+                "created_at": { "type": "string", "description": "创建时间" }
+              }
+            }
+          }
+        }
+      },
+      "AdminReceiptListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "total": { "type": "integer", "description": "总条数" },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer", "description": "批次ID" },
+                    "customer_id": { "type": "integer", "description": "客户ID" },
+                    "customer_name": { "type": "string", "description": "客户名称" },
+                    "total_amount": { "type": "string", "description": "总金额" },
+                    "paid_amount": { "type": "string", "description": "已付金额" },
+                    "status": { "type": "string", "description": "状态" },
+                    "remark": { "type": "string", "description": "备注" },
+                    "created_at": { "type": "string", "description": "创建时间" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "AdminReceiptDetailResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "receipt": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer", "description": "批次ID" },
+                  "customer_id": { "type": "integer", "description": "客户ID" },
+                  "customer_name": { "type": "string", "description": "客户名称" },
+                  "total_amount": { "type": "string", "description": "总金额" },
+                  "paid_amount": { "type": "string", "description": "已付金额" },
+                  "status": { "type": "string", "description": "状态" },
+                  "remark": { "type": "string", "description": "备注" },
+                  "created_at": { "type": "string", "description": "创建时间" },
+                  "payments": {
+                    "type": "array",
+                    "description": "付款记录列表",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer", "description": "付款记录ID" },
+                        "amount": { "type": "string", "description": "付款金额" },
+                        "image_url": { "type": "string", "description": "付款凭证图片" },
+                        "status": { "type": "string", "description": "状态" },
+                        "remark": { "type": "string", "description": "备注" },
+                        "created_at": { "type": "string", "description": "创建时间" }
+                      }
+                    }
+                  }
+                }
+              },
+              "goods": {
+                "type": "array",
+                "description": "商品列表",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer", "description": "明细ID" },
+                    "goods_id": { "type": "integer", "description": "商品ID" },
+                    "goods_name": { "type": "string", "description": "商品名称" },
+                    "price": { "type": "string", "description": "单价" },
+                    "quantity": { "type": "integer", "description": "数量" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "AdminApproveRequest": {
+        "type": "object",
+        "required": ["paid_amount"],
+        "properties": {
+          "paid_amount": { "type": "string", "description": "本次实际收款金额" }
+        }
+      },
+      "AdminRejectRequest": {
+        "type": "object",
+        "required": ["reason"],
+        "properties": {
+          "reason": { "type": "string", "description": "拒绝理由" }
+        }
+      },
+      "AuditLogResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer", "description": "审核记录ID" },
+                "payment_id": { "type": "integer", "description": "付款记录ID" },
+                "status": {
+                  "type": "string",
+                  "description": "审核状态：pending、approved、rejected"
+                },
+                "operator_id": { "type": "integer", "description": "操作人ID" },
+                "operator_name": { "type": "string", "description": "操作人名称" },
+                "reason": { "type": "string", "description": "拒绝理由" },
+                "created_at": { "type": "string", "description": "操作时间" }
+              }
+            }
+          }
+        }
+      },
+      "GetTokenRequest": {
+        "type": "object",
+        "required": ["mobile", "password"],
+        "properties": {
+          "mobile": { "type": "string", "description": "手机号" },
+          "password": { "type": "string", "description": "密码" }
+        }
+      },
+      "GetTokenResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": { "type": "string", "description": "商家访问 Token" }
+            }
+          }
+        }
+      },
+      "CustomerReceiptListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer", "description": "批次ID" },
+                "total_amount": { "type": "string", "description": "总金额" },
+                "paid_amount": { "type": "string", "description": "已付金额" },
+                "status": { "type": "string", "description": "状态" },
+                "remark": { "type": "string", "description": "备注" },
+                "created_at": { "type": "string", "description": "创建时间" }
+              }
+            }
+          }
+        }
+      },
+      "CustomerReceiptDetailListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "goods": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer", "description": "明细ID" },
+                      "goods_id": { "type": "integer", "description": "商品ID" },
+                      "goods_name": { "type": "string", "description": "商品名称" },
+                      "price": { "type": "string", "description": "单价" },
+                      "quantity": { "type": "integer", "description": "数量" }
+                    }
+                  }
+                },
+                "receipt": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer", "description": "批次ID" },
+                    "total_amount": { "type": "string", "description": "总金额" },
+                    "paid_amount": { "type": "string", "description": "已付金额" },
+                    "status": { "type": "string", "description": "状态" },
+                    "remark": { "type": "string", "description": "备注" },
+                    "created_at": { "type": "string", "description": "创建时间" },
+                    "payments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "description": "付款记录ID" },
+                          "amount": { "type": "string", "description": "付款金额" },
+                          "image_url": { "type": "string", "description": "付款凭证图片" },
+                          "status": { "type": "string", "description": "状态" },
+                          "remark": { "type": "string", "description": "备注" },
+                          "created_at": { "type": "string", "description": "创建时间" },
+                          "audit_logs": {
+                            "type": "array",
+                            "description": "审核历史",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": { "type": "integer", "description": "审核记录ID" },
+                                "status": { "type": "string", "description": "审核状态" },
+                                "operator_name": { "type": "string", "description": "操作人" },
+                                "reason": { "type": "string", "description": "拒绝理由" },
+                                "created_at": { "type": "string", "description": "操作时间" }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "TicketUploadRequest": {
+        "type": "object",
+        "required": ["file", "receipt_id", "amount"],
+        "properties": {
+          "file": { "type": "string", "format": "binary", "description": "图片文件" },
+          "receipt_id": { "type": "string", "description": "批次ID" },
+          "amount": { "type": "string", "description": "付款金额" },
+          "remark": { "type": "string", "description": "备注" }
+        }
+      },
+      "TicketUploadResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer", "description": "付款记录ID" },
+              "receipt_id": { "type": "integer", "description": "批次ID" },
+              "amount": { "type": "string", "description": "付款金额" },
+              "image_url": { "type": "string", "description": "付款凭证图片URL" },
+              "status": { "type": "string", "description": "状态" },
+              "created_at": { "type": "string", "description": "创建时间" }
+            }
+          }
+        }
+      },
+      "ReceiptPaymentListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "total": { "type": "integer", "description": "总条数" },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer", "description": "付款记录ID" },
+                    "receipt_id": { "type": "integer", "description": "批次ID" },
+                    "amount": { "type": "string", "description": "付款金额" },
+                    "image_url": { "type": "string", "description": "付款凭证图片" },
+                    "status": { "type": "string", "description": "状态" },
+                    "remark": { "type": "string", "description": "备注" },
+                    "created_at": { "type": "string", "description": "创建时间" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ReceiptPaymentDetailResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer", "description": "付款记录ID" },
+              "receipt_id": { "type": "integer", "description": "批次ID" },
+              "amount": { "type": "string", "description": "付款金额" },
+              "image_url": { "type": "string", "description": "付款凭证图片" },
+              "status": { "type": "string", "description": "状态" },
+              "remark": { "type": "string", "description": "备注" },
+              "created_at": { "type": "string", "description": "创建时间" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

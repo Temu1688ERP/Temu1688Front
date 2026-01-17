@@ -151,6 +151,49 @@
             </ElButton>
           </ElFormItem>
         </ElForm>
+
+        <!-- 付款记录列表 -->
+        <div class="payment-section">
+          <h3 class="payment-title">付款记录</h3>
+          <ElTable :data="paymentList" v-loading="paymentListLoading" stripe border>
+            <ElTableColumn prop="id" label="记录ID" width="100" align="center" />
+            <ElTableColumn prop="amount" label="付款金额" width="120" align="right">
+              <template #default="{ row }"> ¥{{ row.amount }} </template>
+            </ElTableColumn>
+            <ElTableColumn label="付款凭证" width="100" align="center">
+              <template #default="{ row }">
+                <ElImage
+                  v-if="row.image_url"
+                  :src="row.image_url"
+                  :preview-src-list="[row.image_url]"
+                  fit="cover"
+                  style="width: 50px; height: 50px; border-radius: 4px"
+                />
+              </template>
+            </ElTableColumn>
+            <ElTableColumn prop="status" label="状态" width="100" align="center">
+              <template #default="{ row }">
+                <ElTag :type="getPaymentStatusType(row.status)">
+                  {{ getPaymentStatusLabel(row.status) }}
+                </ElTag>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn prop="remark" label="备注" min-width="150" show-overflow-tooltip />
+            <ElTableColumn prop="created_at" label="创建时间" width="180" align="center" />
+          </ElTable>
+          <div class="payment-pagination">
+            <ElPagination
+              v-model:current-page="paymentPagination.current"
+              v-model:page-size="paymentPagination.size"
+              :total="paymentPagination.total"
+              :page-sizes="[10, 20, 30, 50]"
+              layout="total, sizes, prev, pager, next, jumper"
+              background
+              @size-change="handlePaymentSizeChange"
+              @current-change="handlePaymentCurrentChange"
+            />
+          </div>
+        </div>
       </div>
     </ElDrawer>
   </div>
@@ -170,8 +213,10 @@
     fetchCustomerReceiptList,
     fetchCustomerReceiptDetail,
     fetchUploadTicket,
+    fetchPaymentList,
     type CustomerReceipt,
-    type ReceiptDetailItem
+    type ReceiptDetailItem,
+    type PaymentRecord
   } from '@/api/customer'
 
   defineOptions({
@@ -195,6 +240,19 @@
 
   const getStatusLabel = (status: string) => STATUS_MAP[status]?.label || status
   const getStatusType = (status: string) => STATUS_MAP[status]?.type || 'info'
+
+  // 付款记录状态映射
+  const PAYMENT_STATUS_MAP: Record<
+    string,
+    { label: string; type: 'warning' | 'info' | 'danger' | 'success' }
+  > = {
+    pending: { label: '待审核', type: 'warning' },
+    rejected: { label: '已拒绝', type: 'danger' },
+    approved: { label: '已通过', type: 'success' }
+  }
+
+  const getPaymentStatusLabel = (status: string) => PAYMENT_STATUS_MAP[status]?.label || status
+  const getPaymentStatusType = (status: string) => PAYMENT_STATUS_MAP[status]?.type || 'info'
 
   // 表格数据
   const loading = ref(false)
@@ -220,6 +278,15 @@
     amount: undefined as number | undefined,
     remark: '',
     images: [] as UploadUserFile[]
+  })
+
+  // 付款记录列表
+  const paymentListLoading = ref(false)
+  const paymentList = ref<PaymentRecord[]>([])
+  const paymentPagination = reactive({
+    current: 1,
+    size: 10,
+    total: 0
   })
 
   const uploadRules: FormRules = {
@@ -261,8 +328,40 @@
     try {
       const res = await fetchCustomerReceiptDetail(row.id)
       detailData.value = res.data
+      // 获取付款记录列表
+      fetchPaymentListData(row.id)
     } finally {
       detailLoading.value = false
+    }
+  }
+
+  // 获取付款记录列表
+  const fetchPaymentListData = async (receiptId: number) => {
+    paymentListLoading.value = true
+    try {
+      const res = await fetchPaymentList({
+        receipt_id: receiptId,
+        page: paymentPagination.current,
+        page_size: paymentPagination.size
+      })
+      paymentList.value = res.data.data
+      paymentPagination.total = res.data.total
+    } finally {
+      paymentListLoading.value = false
+    }
+  }
+
+  // 付款记录分页
+  const handlePaymentSizeChange = () => {
+    paymentPagination.current = 1
+    if (currentReceiptId.value) {
+      fetchPaymentListData(currentReceiptId.value)
+    }
+  }
+
+  const handlePaymentCurrentChange = () => {
+    if (currentReceiptId.value) {
+      fetchPaymentListData(currentReceiptId.value)
     }
   }
 
@@ -415,5 +514,24 @@
     margin-top: 8px;
     font-size: 12px;
     color: #909399;
+  }
+
+  .payment-section {
+    padding: 24px 0;
+    margin-top: 24px;
+    border-top: 1px solid #ebeef5;
+  }
+
+  .payment-title {
+    margin: 0 0 20px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #303133;
+  }
+
+  .payment-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
   }
 </style>

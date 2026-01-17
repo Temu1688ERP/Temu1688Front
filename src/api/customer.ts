@@ -117,3 +117,41 @@ export function fetchUploadTicket(data: FormData) {
     data
   })
 }
+
+// 付款记录项
+export interface PaymentRecord {
+  id: number
+  receipt_id: number
+  amount: string
+  image_url: string
+  status: string
+  remark: string
+  created_at: string
+}
+
+// 付款记录列表响应
+export interface PaymentListResponse {
+  code: number
+  msg: string
+  data: {
+    total: number
+    data: PaymentRecord[]
+  }
+}
+
+// 付款记录列表查询参数
+export interface PaymentListParams {
+  id?: number
+  receipt_id?: number
+  status?: 'pending' | 'rejected'
+  page?: number
+  page_size?: number
+}
+
+// 获取付款记录列表
+export function fetchPaymentList(params: PaymentListParams) {
+  return request.get<PaymentListResponse>({
+    url: '/api/customer/receipt/payment/list',
+    params
+  })
+}
