@@ -1,96 +1,29 @@
 <template>
   <div class="payment-list-page art-full-height">
-    <!-- 搜索栏 -->
-    <div class="search-bar">
-      <ElForm :model="searchForm" label-width="100px" inline>
-        <ElFormItem label="状态">
-          <ElSelect v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <ElOption label="待审核" value="pending" />
-            <ElOption label="已通过" value="approved" />
-            <ElOption label="已拒绝" value="rejected" />
-          </ElSelect>
-        </ElFormItem>
-        <ElFormItem label="日期范围">
-          <ElDatePicker
-            v-model="dateRange"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            @change="handleDateChange"
-          />
-        </ElFormItem>
-        <ElFormItem>
-          <ElButton type="primary" @click="handleSearch">搜索</ElButton>
-          <ElButton @click="resetSearch">重置</ElButton>
-        </ElFormItem>
-      </ElForm>
-    </div>
+    <PaymentSearch
+      v-model="searchForm"
+      @search="handleSearch"
+      @reset="resetSearchParams"
+    ></PaymentSearch>
 
     <ElCard class="art-table-card" shadow="never">
-      <!-- 表格 -->
-      <ElTable :data="data" v-loading="loading" stripe border @row-click="handleRowClick">
-        <ElTableColumn prop="id" label="记录ID" width="80" align="center" />
-        <ElTableColumn prop="batch_no" label="批次号" width="140" align="center" />
-        <ElTableColumn prop="receipt_date" label="批次日期" width="110" align="center" />
-        <ElTableColumn prop="uploader_name" label="商家名称" width="120" />
-        <ElTableColumn prop="amount" label="付款金额" width="120" align="right">
-          <template #default="{ row }"> ¥{{ row.amount }} </template>
-        </ElTableColumn>
-        <ElTableColumn label="付款凭证" width="100" align="center">
-          <template #default="{ row }">
-            <ElImage
-              v-if="row.image_url"
-              :src="row.image_url"
-              :preview-src-list="[row.image_url]"
-              fit="cover"
-              style="width: 50px; height: 50px; cursor: pointer; border-radius: 4px"
-              :hide-on-click-modal="true"
-              @click.stop
-            />
-          </template>
-        </ElTableColumn>
-        <ElTableColumn prop="status" label="付款状态" width="100" align="center">
-          <template #default="{ row }">
-            <ElTag :type="getStatusType(row.status)">
-              {{ getStatusLabel(row.status) }}
-            </ElTag>
-          </template>
-        </ElTableColumn>
-        <ElTableColumn prop="receipt_status" label="批次状态" width="100" align="center">
-          <template #default="{ row }">
-            <ElTag :type="getReceiptStatusType(row.receipt_status)">
-              {{ getReceiptStatusLabel(row.receipt_status) }}
-            </ElTag>
-          </template>
-        </ElTableColumn>
-        <ElTableColumn prop="remark" label="备注" min-width="120" show-overflow-tooltip />
-        <ElTableColumn
-          prop="reject_reason"
-          label="拒绝理由"
-          min-width="150"
-          show-overflow-tooltip
-        />
-        <ElTableColumn prop="uploaded_at" label="上传时间" width="180" align="center" />
-      </ElTable>
+      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
+      </ArtTableHeader>
 
-      <!-- 分页 -->
-      <div class="table-pagination">
-        <ElPagination
-          v-model:current-page="pagination.current"
-          v-model:page-size="pagination.size"
-          :total="pagination.total"
-          :page-sizes="[10, 20, 30, 50]"
-          layout="total, sizes, prev, pager, next, jumper"
-          background
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
+      <ArtTable
+        :loading="loading"
+        :data="data"
+        :columns="columns"
+        :pagination="pagination"
+        @pagination:size-change="handleSizeChange"
+        @pagination:current-change="handleCurrentChange"
+      >
+        <template #operation="{ row }">
+          <ElButton type="primary" link @click="handleViewDetail(row)">查看</ElButton>
+        </template>
+      </ArtTable>
     </ElCard>
 
-    <!-- 付款记录详情对话框 -->
     <ElDialog v-model="detailVisible" title="付款记录详情" width="800px">
       <div class="detail-section">
         <h4 class="section-title">基本信息</h4>
@@ -132,6 +65,7 @@
           :src="currentDetail.image_url"
           :preview-src-list="[currentDetail.image_url]"
           fit="contain"
+          preview-teleported
           style="width: 200px; height: 200px; cursor: pointer; border-radius: 4px"
           :hide-on-click-modal="true"
         />
@@ -160,15 +94,23 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref, h } from 'vue'
+  import { useTable } from '@/hooks/core/useTable'
   import { fetchGetPaymentList, fetchAuditLogs } from '@/api/system-manage'
+  import PaymentSearch from './modules/payment-search.vue'
+  import {
+    ElTag,
+    ElImage,
+    ElDescriptions,
+    ElDescriptionsItem,
+    ElEmpty,
+    ElButton
+  } from 'element-plus'
 
   defineOptions({ name: 'FinancePaymentList' })
 
   type PaymentListItem = Api.SystemManage.PaymentListItem
-  type PaymentStatus = Api.SystemManage.PaymentStatus
 
-  // 付款状态映射
   const STATUS_MAP: Record<
     string,
     { label: string; type: 'warning' | 'success' | 'danger' | 'info' }
@@ -178,7 +120,6 @@
     rejected: { label: '已拒绝', type: 'danger' }
   }
 
-  // 批次状态映射
   const RECEIPT_STATUS_MAP: Record<
     string,
     { label: string; type: 'success' | 'warning' | 'danger' | 'info' }
@@ -198,94 +139,21 @@
   const getLogStatusLabel = (status?: string) => STATUS_MAP[status || '']?.label || status || ''
   const getLogStatusType = (status?: string) => STATUS_MAP[status || '']?.type || 'info'
 
-  // 搜索表单
-  const searchForm = reactive({
-    status: '',
-    start_date: '',
-    end_date: ''
+  const searchForm = ref({
+    status: undefined as string | undefined,
+    dateRange: undefined as [string, string] | undefined
   })
 
-  const dateRange = ref<[string, string] | null>(null)
-
-  // 分页
-  const pagination = reactive({
-    current: 1,
-    size: 10,
-    total: 0
-  })
-
-  // 表格数据
-  const loading = ref(false)
-  const data = ref<PaymentListItem[]>([])
-
-  // 详情弹窗
   const detailVisible = ref(false)
   const currentDetail = ref<PaymentListItem | null>(null)
   const auditLogs = ref<
     { id: number; status: string; operator_name: string; reason: string; created_at: string }[]
   >([])
 
-  // 日期范围变化
-  const handleDateChange = (val: [string, string] | null) => {
-    if (val) {
-      searchForm.start_date = val[0]
-      searchForm.end_date = val[1]
-    } else {
-      searchForm.start_date = ''
-      searchForm.end_date = ''
-    }
-  }
-
-  // 获取数据
-  const getData = async () => {
-    loading.value = true
-    try {
-      const res = await fetchGetPaymentList({
-        status: (searchForm.status as PaymentStatus) || undefined,
-        start_date: searchForm.start_date || undefined,
-        end_date: searchForm.end_date || undefined,
-        page: pagination.current,
-        page_size: pagination.size
-      })
-      data.value = res.data
-      pagination.total = res.total
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // 搜索
-  const handleSearch = () => {
-    pagination.current = 1
-    getData()
-  }
-
-  // 重置
-  const resetSearch = () => {
-    searchForm.status = ''
-    searchForm.start_date = ''
-    searchForm.end_date = ''
-    dateRange.value = null
-    pagination.current = 1
-    getData()
-  }
-
-  // 分页
-  const handleSizeChange = () => {
-    pagination.current = 1
-    getData()
-  }
-
-  const handleCurrentChange = () => {
-    getData()
-  }
-
-  // 点击行查看详情
-  const handleRowClick = async (row: PaymentListItem) => {
+  const handleViewDetail = async (row: PaymentListItem) => {
     currentDetail.value = row
     detailVisible.value = true
 
-    // 获取审核历史
     try {
       const res = await fetchAuditLogs({ payment_id: row.id })
       auditLogs.value = res.data
@@ -295,69 +163,92 @@
     }
   }
 
-  onMounted(() => {
-    getData()
+  const {
+    columns,
+    columnChecks,
+    data,
+    loading,
+    pagination,
+    getData,
+    searchParams,
+    resetSearchParams,
+    handleSizeChange,
+    handleCurrentChange,
+    refreshData
+  } = useTable({
+    core: {
+      apiFn: fetchGetPaymentList,
+      apiParams: {},
+      columnsFactory: () => [
+        { prop: 'id', label: '记录ID', width: 80, align: 'center' },
+        { prop: 'batch_no', label: '批次号', width: 140, align: 'center' },
+        { prop: 'receipt_date', label: '批次日期', width: 110, align: 'center' },
+        { prop: 'uploader_name', label: '商家名称', width: 120 },
+        {
+          prop: 'amount',
+          label: '付款金额',
+          width: 120,
+          align: 'right',
+          formatter: (row: PaymentListItem) => `¥${row.amount}`
+        },
+        {
+          prop: 'image_url',
+          label: '付款凭证',
+          width: 100,
+          align: 'center',
+          formatter: (row: PaymentListItem) =>
+            row.image_url
+              ? h(ElImage, {
+                  src: row.image_url,
+                  previewSrcList: [row.image_url],
+                  fit: 'cover',
+                  'preview-teleported': true,
+                  style: { width: '50px', height: '50px', cursor: 'pointer', borderRadius: '4px' },
+                  hideOnClickModal: true
+                })
+              : '-'
+        },
+        {
+          prop: 'status',
+          label: '付款状态',
+          width: 100,
+          align: 'center',
+          formatter: (row: PaymentListItem) =>
+            h(ElTag, { type: getStatusType(row.status) }, () => getStatusLabel(row.status))
+        },
+        {
+          prop: 'receipt_status',
+          label: '批次状态',
+          width: 100,
+          align: 'center',
+          formatter: (row: PaymentListItem) =>
+            h(ElTag, { type: getReceiptStatusType(row.receipt_status) }, () =>
+              getReceiptStatusLabel(row.receipt_status)
+            )
+        },
+        { prop: 'remark', label: '备注', minWidth: 120, showOverflowTooltip: true },
+        { prop: 'reject_reason', label: '拒绝理由', minWidth: 150, showOverflowTooltip: true },
+        { prop: 'uploaded_at', label: '上传时间', width: 180, align: 'center' },
+        {
+          prop: 'operation',
+          label: '操作',
+          width: 100,
+          align: 'center',
+          fixed: 'right',
+          slotName: 'operation'
+        }
+      ]
+    }
   })
+
+  const handleSearch = (params: Record<string, any>) => {
+    const searchParamsData = { ...params }
+    if (searchParamsData.dateRange && Array.isArray(searchParamsData.dateRange)) {
+      searchParamsData.start_date = searchParamsData.dateRange[0]
+      searchParamsData.end_date = searchParamsData.dateRange[1]
+      delete searchParamsData.dateRange
+    }
+    Object.assign(searchParams, searchParamsData)
+    getData()
+  }
 </script>
-
-<style scoped lang="scss">
-  .payment-list-page {
-    padding: 20px;
-  }
-
-  .search-bar {
-    padding: 20px;
-    margin-bottom: 20px;
-    background: #fff;
-    border-radius: 4px;
-  }
-
-  .table-pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
-
-  .detail-section {
-    margin-bottom: 24px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    .section-title {
-      padding-left: 8px;
-      margin-bottom: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #303133;
-      border-left: 3px solid #409eff;
-    }
-  }
-
-  :deep(.el-table) {
-    th.el-table__cell {
-      border-right: 1px solid #ebeef5;
-    }
-
-    td.el-table__cell {
-      border-right: 1px solid #ebeef5;
-    }
-
-    td.el-table__cell:last-child {
-      border-right: none;
-    }
-
-    th.el-table__cell:last-child {
-      border-right: none;
-    }
-  }
-
-  :deep(.el-image-viewer) {
-    z-index: 9999 !important;
-  }
-
-  :deep(.el-image-viewer__wrapper) {
-    z-index: 9999 !important;
-  }
-</style>

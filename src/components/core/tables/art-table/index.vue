@@ -122,7 +122,7 @@
   }
 
   /** ArtTable 组件的 Props 接口 */
-  interface ArtTableProps extends TableProps<Record<string, any>> {
+  interface ArtTableProps extends Omit<TableProps<Record<string, any>>, 'tableLayout'> {
     /** 加载状态 */
     loading?: boolean
     /** 列渲染配置 */
@@ -137,6 +137,8 @@
     emptyText?: string
     /** 是否开启 ArtTableHeader，解决表格高度自适应问题 */
     showTableHeader?: boolean
+    /** 表格布局 */
+    tableLayout?: 'auto' | 'fixed'
   }
 
   const props = withDefaults(defineProps<ArtTableProps>(), {
@@ -148,7 +150,8 @@
     size: undefined,
     emptyHeight: '100%',
     emptyText: '暂无数据',
-    showTableHeader: true
+    showTableHeader: true,
+    tableLayout: 'fixed'
   })
 
   const LAYOUT = {

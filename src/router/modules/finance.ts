@@ -13,7 +13,7 @@ export const financeRoutes: AppRouteRecord = {
     {
       path: 'payments',
       name: 'PaymentAudit',
-      component: '/system/temu/modules/payment-list',
+      component: '/finance/payment-audit',
       meta: {
         title: '付款单',
         keepAlive: true,

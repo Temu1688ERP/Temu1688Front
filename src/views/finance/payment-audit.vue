@@ -1,106 +1,56 @@
 <template>
   <div class="payment-list-page art-full-height">
-    <!-- 搜索栏 -->
-    <div class="search-bar">
-      <ElForm :model="searchForm" label-width="100px" inline>
-        <ElFormItem label="状态">
-          <ElSelect v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <ElOption label="待审核" value="pending" />
-            <ElOption label="已通过" value="approved" />
-            <ElOption label="已拒绝" value="rejected" />
-          </ElSelect>
-        </ElFormItem>
-        <ElFormItem label="日期范围">
-          <ElDatePicker
-            v-model="dateRange"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            @change="handleDateChange"
-          />
-        </ElFormItem>
-        <ElFormItem>
-          <ElButton type="primary" @click="handleSearch">搜索</ElButton>
-          <ElButton @click="resetSearch">重置</ElButton>
-        </ElFormItem>
-      </ElForm>
-    </div>
+    <PaymentSearch
+      v-model="searchForm"
+      @search="handleSearch"
+      @reset="resetSearchParams"
+    ></PaymentSearch>
 
     <ElCard class="art-table-card" shadow="never">
-      <!-- 表格 -->
-      <ElTable :data="data" v-loading="loading" stripe border @row-click="handleRowClick">
-        <ElTableColumn prop="id" label="记录ID" width="80" align="center" />
-        <ElTableColumn prop="batch_no" label="批次号" width="140" align="center" />
-        <ElTableColumn prop="receipt_date" label="批次日期" width="110" align="center" />
-        <ElTableColumn prop="uploader_name" label="商家名称" width="120" />
-        <ElTableColumn prop="amount" label="付款金额" width="120" align="right">
-          <template #default="{ row }"> ¥{{ row.amount }} </template>
-        </ElTableColumn>
-        <ElTableColumn label="付款凭证" width="100" align="center">
-          <template #default="{ row }">
-            <ElImage
-              v-if="row.image_url"
-              :src="row.image_url"
-              :preview-src-list="[row.image_url]"
-              fit="cover"
-              style="width: 50px; height: 50px; cursor: pointer; border-radius: 4px"
-              :hide-on-click-modal="true"
-            />
-          </template>
-        </ElTableColumn>
-        <ElTableColumn prop="status" label="付款状态" width="100" align="center">
-          <template #default="{ row }">
-            <ElTag :type="getStatusType(row.status)">
-              {{ getStatusLabel(row.status) }}
-            </ElTag>
-          </template>
-        </ElTableColumn>
-        <ElTableColumn prop="receipt_status" label="批次状态" width="100" align="center">
-          <template #default="{ row }">
-            <ElTag :type="getReceiptStatusType(row.receipt_status)">
-              {{ getReceiptStatusLabel(row.receipt_status) }}
-            </ElTag>
-          </template>
-        </ElTableColumn>
-        <ElTableColumn prop="remark" label="备注" min-width="120" show-overflow-tooltip />
-        <ElTableColumn
-          prop="reject_reason"
-          label="拒绝理由"
-          min-width="150"
-          show-overflow-tooltip
-        />
-        <ElTableColumn prop="uploaded_at" label="上传时间" width="180" align="center" />
-        <ElTableColumn label="操作" width="180" align="center" fixed="right">
-          <template #default="{ row }">
-            <template v-if="row.status === 'pending'">
-              <ElButton type="success" size="small" @click="handleApprove(row)">通过</ElButton>
-              <ElButton type="danger" size="small" @click="handleReject(row)">拒绝</ElButton>
-            </template>
-            <ElButton v-else type="info" size="small" @click="handleViewLogs(row)">
-              查看审核历史
-            </ElButton>
-          </template>
-        </ElTableColumn>
-      </ElTable>
+      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
+      </ArtTableHeader>
 
-      <!-- 分页 -->
-      <div class="table-pagination">
-        <ElPagination
-          v-model:current-page="pagination.current"
-          v-model:page-size="pagination.size"
-          :total="pagination.total"
-          :page-sizes="[10, 20, 30, 50]"
-          layout="total, sizes, prev, pager, next, jumper"
-          background
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
+      <ArtTable
+        :loading="loading"
+        :data="data"
+        :columns="columns"
+        :pagination="pagination"
+        @pagination:size-change="handleSizeChange"
+        @pagination:current-change="handleCurrentChange"
+      >
+        <template #status="{ row }">
+          <ElTag :type="getStatusType(row.status)">
+            {{ getStatusLabel(row.status) }}
+          </ElTag>
+        </template>
+        <template #receipt_status="{ row }">
+          <ElTag :type="getReceiptStatusType(row.receipt_status)">
+            {{ getReceiptStatusLabel(row.receipt_status) }}
+          </ElTag>
+        </template>
+        <template #image_url="{ row }">
+          <ElImage
+            v-if="row.image_url"
+            :src="row.image_url"
+            :preview-src-list="[row.image_url]"
+            fit="cover"
+            preview-teleported
+            style="width: 50px; height: 50px; cursor: pointer; border-radius: 4px"
+            :hide-on-click-modal="true"
+          />
+        </template>
+        <template #operation="{ row }">
+          <template v-if="row.status === 'pending'">
+            <ElButton type="success" size="small" @click="handleApprove(row)">通过</ElButton>
+            <ElButton type="danger" size="small" @click="handleReject(row)">拒绝</ElButton>
+          </template>
+          <ElButton v-else type="info" size="small" @click="handleViewLogs(row)">
+            查看审核历史
+          </ElButton>
+        </template>
+      </ArtTable>
     </ElCard>
 
-    <!-- 审核通过对话框 -->
     <ElDialog v-model="approveVisible" title="审核通过" width="400px">
       <ElForm ref="approveFormRef" :model="approveForm" :rules="approveRules" label-width="100px">
         <ElFormItem label="实际收款" prop="paid_amount">
@@ -121,7 +71,6 @@
       </template>
     </ElDialog>
 
-    <!-- 审核拒绝对话框 -->
     <ElDialog v-model="rejectVisible" title="审核拒绝" width="400px">
       <ElForm ref="rejectFormRef" :model="rejectForm" :rules="rejectRules" label-width="100px">
         <ElFormItem label="拒绝理由" prop="reason">
@@ -141,7 +90,6 @@
       </template>
     </ElDialog>
 
-    <!-- 审核历史对话框 -->
     <ElDialog v-model="logsVisible" title="审核历史" width="600px">
       <ElTable :data="auditLogs" stripe border>
         <ElTableColumn prop="id" label="ID" width="80" align="center" />
@@ -158,7 +106,6 @@
       </ElTable>
     </ElDialog>
 
-    <!-- 付款记录详情对话框 -->
     <ElDialog v-model="detailVisible" title="付款记录详情" width="800px">
       <div class="detail-section">
         <h4 class="section-title">基本信息</h4>
@@ -183,9 +130,9 @@
               {{ getStatusLabel(currentDetail?.status) }}
             </ElTag>
           </ElDescriptionsItem>
-          <ElDescriptionsItem label="备注" :span="2">{{
-            currentDetail?.remark || '-'
-          }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="备注" :span="2">
+            {{ currentDetail?.remark || '-' }}
+          </ElDescriptionsItem>
           <ElDescriptionsItem label="上传时间">{{ currentDetail?.uploaded_at }}</ElDescriptionsItem>
           <ElDescriptionsItem label="拒绝理由">{{
             currentDetail?.reject_reason || '-'
@@ -228,21 +175,29 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref } from 'vue'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+  import { useTable } from '@/hooks/core/useTable'
   import {
     fetchGetPaymentList,
     fetchApprovePayment,
     fetchRejectPayment,
     fetchAuditLogs
   } from '@/api/system-manage'
+  import PaymentSearch from './modules/payment-search.vue'
+  import {
+    ElTag,
+    ElImage,
+    ElDescriptions,
+    ElDescriptionsItem,
+    ElEmpty,
+    ElButton
+  } from 'element-plus'
 
   defineOptions({ name: 'PaymentAudit' })
 
   type PaymentListItem = Api.SystemManage.PaymentListItem
-  type PaymentStatus = Api.SystemManage.PaymentStatus
 
-  // 付款状态映射
   const STATUS_MAP: Record<
     string,
     { label: string; type: 'warning' | 'success' | 'danger' | 'info' }
@@ -252,7 +207,6 @@
     rejected: { label: '已拒绝', type: 'danger' }
   }
 
-  // 批次状态映射
   const RECEIPT_STATUS_MAP: Record<
     string,
     { label: string; type: 'success' | 'warning' | 'danger' | 'info' }
@@ -269,43 +223,26 @@
   const getReceiptStatusLabel = (status?: string) =>
     RECEIPT_STATUS_MAP[status || '']?.label || status || ''
   const getReceiptStatusType = (status?: string) => RECEIPT_STATUS_MAP[status || '']?.type || 'info'
-  const getLogStatusLabel = (status: string) => STATUS_MAP[status]?.label || status
-  const getLogStatusType = (status: string) => STATUS_MAP[status]?.type || 'info'
+  const getLogStatusLabel = (status?: string) => STATUS_MAP[status || '']?.label || status || ''
+  const getLogStatusType = (status?: string) => STATUS_MAP[status || '']?.type || 'info'
 
-  // 搜索表单
-  const searchForm = reactive({
-    status: '',
-    start_date: '',
-    end_date: ''
+  const searchForm = ref({
+    status: undefined as string | undefined,
+    dateRange: undefined as [string, string] | undefined
   })
 
-  const dateRange = ref<[string, string] | null>(null)
-
-  // 分页
-  const pagination = reactive({
-    current: 1,
-    size: 10,
-    total: 0
-  })
-
-  // 表格数据
-  const loading = ref(false)
-  const data = ref<PaymentListItem[]>([])
-
-  // 审核通过
   const approveVisible = ref(false)
   const approveLoading = ref(false)
   const approveFormRef = ref<FormInstance>()
   const currentApproveRow = ref<PaymentListItem | null>(null)
   const approveForm = reactive({
-    paid_amount: ''
+    paid_amount: '' as string
   })
 
   const approveRules: FormRules = {
     paid_amount: [{ required: true, message: '请输入实际收款金额', trigger: 'blur' }]
   }
 
-  // 审核拒绝
   const rejectVisible = ref(false)
   const rejectLoading = ref(false)
   const rejectFormRef = ref<FormInstance>()
@@ -318,75 +255,28 @@
     reason: [{ required: true, message: '请输入拒绝理由', trigger: 'blur' }]
   }
 
-  // 审核历史
   const logsVisible = ref(false)
   const auditLogs = ref<
     { id: number; status: string; operator_name: string; reason: string; created_at: string }[]
   >([])
 
-  // 详情弹窗
   const detailVisible = ref(false)
   const currentDetail = ref<PaymentListItem | null>(null)
 
-  // 日期范围变化
-  const handleDateChange = (val: [string, string] | null) => {
-    if (val) {
-      searchForm.start_date = val[0]
-      searchForm.end_date = val[1]
-    } else {
-      searchForm.start_date = ''
-      searchForm.end_date = ''
-    }
-  }
-
-  // 获取数据
-  const getData = async () => {
-    loading.value = true
+  const handleViewLogs = async (row: PaymentListItem) => {
     try {
-      const res = await fetchGetPaymentList({
-        status: (searchForm.status as PaymentStatus) || undefined,
-        start_date: searchForm.start_date || undefined,
-        end_date: searchForm.end_date || undefined,
-        page: pagination.current,
-        page_size: pagination.size
-      })
-      data.value = res.data
-      pagination.total = res.total
-    } finally {
-      loading.value = false
+      const res = await fetchAuditLogs({ payment_id: row.id })
+      auditLogs.value = res.data
+      logsVisible.value = true
+    } catch (error) {
+      console.error('获取审核历史失败:', error)
+      ElMessage.error('获取审核历史失败')
     }
   }
 
-  // 搜索
-  const handleSearch = () => {
-    pagination.current = 1
-    getData()
-  }
-
-  // 重置
-  const resetSearch = () => {
-    searchForm.status = ''
-    searchForm.start_date = ''
-    searchForm.end_date = ''
-    dateRange.value = null
-    pagination.current = 1
-    getData()
-  }
-
-  // 分页
-  const handleSizeChange = () => {
-    pagination.current = 1
-    getData()
-  }
-
-  const handleCurrentChange = () => {
-    getData()
-  }
-
-  // 审核通过
   const handleApprove = (row: PaymentListItem) => {
     currentApproveRow.value = row
-    approveForm.paid_amount = row.amount
+    approveForm.paid_amount = String(row.amount)
     approveVisible.value = true
   }
 
@@ -406,7 +296,7 @@
       })
       ElMessage.success('审核通过成功')
       approveVisible.value = false
-      getData()
+      refreshData()
     } catch (error) {
       console.error('审核通过失败:', error)
       ElMessage.error('审核通过失败')
@@ -415,7 +305,6 @@
     }
   }
 
-  // 审核拒绝
   const handleReject = (row: PaymentListItem) => {
     currentRejectRow.value = row
     rejectForm.reason = ''
@@ -438,7 +327,7 @@
       })
       ElMessage.success('已拒绝')
       rejectVisible.value = false
-      getData()
+      refreshData()
     } catch (error) {
       console.error('审核拒绝失败:', error)
       ElMessage.error('审核拒绝失败')
@@ -447,101 +336,82 @@
     }
   }
 
-  // 查看审核历史
-  const handleViewLogs = async (row: PaymentListItem) => {
-    try {
-      const res = await fetchAuditLogs({ payment_id: row.id })
-      auditLogs.value = res.data
-      logsVisible.value = true
-    } catch (error) {
-      console.error('获取审核历史失败:', error)
-      ElMessage.error('获取审核历史失败')
+  const {
+    columns,
+    columnChecks,
+    data,
+    loading,
+    pagination,
+    getData,
+    searchParams,
+    resetSearchParams,
+    handleSizeChange,
+    handleCurrentChange,
+    refreshData
+  } = useTable({
+    core: {
+      apiFn: fetchGetPaymentList,
+      apiParams: {},
+      columnsFactory: () => [
+        { prop: 'id', label: '记录ID', width: 80, align: 'center' },
+        { prop: 'batch_no', label: '批次号', width: 140, align: 'center' },
+        { prop: 'receipt_date', label: '批次日期', width: 110, align: 'center' },
+        { prop: 'uploader_name', label: '商家名称', width: 120 },
+        {
+          prop: 'amount',
+          label: '付款金额',
+          width: 120,
+          align: 'right',
+          formatter: (row: PaymentListItem) => `¥${row.amount}`
+        },
+        {
+          prop: 'image_url',
+          label: '付款凭证',
+          width: 100,
+          align: 'center',
+          useSlot: true,
+          slotName: 'image_url'
+        },
+        {
+          prop: 'status',
+          label: '付款状态',
+          width: 100,
+          align: 'center',
+          useSlot: true,
+          slotName: 'status'
+        },
+        {
+          prop: 'receipt_status',
+          label: '批次状态',
+          width: 100,
+          align: 'center',
+          useSlot: true,
+          slotName: 'receipt_status'
+        },
+        { prop: 'remark', label: '备注', minWidth: 120, showOverflowTooltip: true },
+        { prop: 'reject_reason', label: '拒绝理由', minWidth: 150, showOverflowTooltip: true },
+        { prop: 'uploaded_at', label: '上传时间', width: 180, align: 'center' },
+        {
+          prop: 'operation',
+          label: '操作',
+          width: 180,
+          align: 'center',
+          fixed: 'right',
+          useSlot: true,
+          slotName: 'operation'
+        }
+      ]
     }
-  }
-
-  // 点击行查看详情
-  const handleRowClick = async (row: PaymentListItem) => {
-    currentDetail.value = row
-    detailVisible.value = true
-
-    // 获取审核历史
-    try {
-      const res = await fetchAuditLogs({ payment_id: row.id })
-      auditLogs.value = res.data
-    } catch (error) {
-      console.error('获取审核历史失败:', error)
-      auditLogs.value = []
-    }
-  }
-
-  onMounted(() => {
-    getData()
   })
+
+  const handleSearch = (params: Record<string, any>) => {
+    const searchParamsData = { ...params }
+    if (searchParamsData.dateRange && Array.isArray(searchParamsData.dateRange)) {
+      searchParamsData.start_date = searchParamsData.dateRange[0]
+      searchParamsData.end_date = searchParamsData.dateRange[1]
+      delete searchParamsData.dateRange
+    }
+    Object.assign(searchParams, searchParamsData)
+    getData()
+  }
 </script>
-
-<style scoped lang="scss">
-  .payment-list-page {
-    padding: 20px;
-  }
-
-  .search-bar {
-    padding: 20px;
-    margin-bottom: 20px;
-    background: #fff;
-    border-radius: 4px;
-  }
-
-  :deep(.el-table) {
-    // 确保列之间有分界线
-    th.el-table__cell {
-      border-right: 1px solid #ebeef5;
-    }
-
-    td.el-table__cell {
-      border-right: 1px solid #ebeef5;
-    }
-    // 最后一列不显示右边框
-    td.el-table__cell:last-child {
-      border-right: none;
-    }
-
-    th.el-table__cell:last-child {
-      border-right: none;
-    }
-
-    .el-table__row {
-      cursor: pointer;
-    }
-  }
-
-  .table-pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
-
-  .detail-section {
-    margin-bottom: 24px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    .section-title {
-      padding-left: 8px;
-      margin-bottom: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #303133;
-      border-left: 3px solid #409eff;
-    }
-  }
-
-  :deep(.el-image-viewer) {
-    z-index: 9999 !important;
-  }
-
-  :deep(.el-image-viewer__wrapper) {
-    z-index: 9999 !important;
-  }
-</style>
