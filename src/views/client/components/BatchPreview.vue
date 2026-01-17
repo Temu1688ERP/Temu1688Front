@@ -120,6 +120,17 @@
               style="width: 200px"
             />
           </ElFormItem>
+          <ElFormItem label="备注">
+            <ElInput
+              v-model="uploadForm.remark"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入备注"
+              maxlength="200"
+              show-word-limit
+              style="width: 300px"
+            />
+          </ElFormItem>
           <ElFormItem label="付款凭证" prop="images">
             <ElUpload
               v-model:file-list="uploadForm.images"
@@ -158,6 +169,7 @@
   import {
     fetchCustomerReceiptList,
     fetchCustomerReceiptDetail,
+    fetchUploadTicket,
     type CustomerReceipt,
     type ReceiptDetailItem
   } from '@/api/customer'
@@ -206,6 +218,7 @@
   const uploadLoading = ref(false)
   const uploadForm = reactive({
     amount: undefined as number | undefined,
+    remark: '',
     images: [] as UploadUserFile[]
   })
 
@@ -243,6 +256,7 @@
     detailLoading.value = true
     // 重置上传表单
     uploadForm.amount = undefined
+    uploadForm.remark = ''
     uploadForm.images = []
     try {
       const res = await fetchCustomerReceiptDetail(row.id)
@@ -257,17 +271,28 @@
     const valid = await uploadFormRef.value?.validate().catch(() => false)
     if (!valid) return
 
+    if (!uploadForm.images.length) {
+      ElMessage.warning('请上传付款凭证')
+      return
+    }
+
     uploadLoading.value = true
     try {
-      // TODO: 调用上传付款单接口
-      console.log('提交付款单', {
-        receipt_id: currentReceiptId.value,
-        amount: uploadForm.amount,
-        images: uploadForm.images
-      })
+      const formData = new FormData()
+      formData.append('receipt_id', String(currentReceiptId.value))
+      formData.append('file', uploadForm.images[0].raw!)
+      formData.append('amount', String(uploadForm.amount))
+      if (uploadForm.remark) {
+        formData.append('remark', uploadForm.remark)
+      }
+
+      await fetchUploadTicket(formData)
       ElMessage.success('付款单提交成功')
       drawerVisible.value = false
       fetchData()
+    } catch (error) {
+      console.error('上传付款单失败:', error)
+      ElMessage.error('付款单提交失败')
     } finally {
       uploadLoading.value = false
     }

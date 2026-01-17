@@ -66,6 +66,27 @@ export interface CustomerReceiptDetailResponse {
   data: ReceiptDetailItem[]
 }
 
+// 上传小票请求参数
+export interface UploadTicketParams {
+  receipt_id: string
+  file: File
+  amount: string
+  remark?: string
+}
+
+// 上传小票响应
+export interface UploadTicketResponse {
+  code: number
+  msg: string
+  data: {
+    id: number
+    receipt_no: string
+    image_url: string
+    status: string
+    created_at: string
+  }
+}
+
 // 获取供货商 token
 export function fetchCustomerToken(params: CustomerTokenParams) {
   return request.post<CustomerTokenResponse>({
@@ -86,5 +107,13 @@ export function fetchCustomerReceiptDetail(id: number) {
   return request.get<CustomerReceiptDetailResponse>({
     url: '/api/customer/receipt/detail',
     params: { id }
+  })
+}
+
+// 上传小票
+export function fetchUploadTicket(data: FormData) {
+  return request.post<UploadTicketResponse>({
+    url: '/api/customer/receipt/ticket/upload',
+    data
   })
 }
