@@ -403,6 +403,25 @@
     border-radius: 4px;
   }
 
+  :deep(.el-table) {
+    // 确保列之间有分界线
+    th.el-table__cell {
+      border-right: 1px solid #ebeef5;
+    }
+
+    td.el-table__cell {
+      border-right: 1px solid #ebeef5;
+    }
+    // 最后一列不显示右边框
+    td.el-table__cell:last-child {
+      border-right: none;
+    }
+
+    th.el-table__cell:last-child {
+      border-right: none;
+    }
+  }
+
   .table-pagination {
     display: flex;
     justify-content: center;
