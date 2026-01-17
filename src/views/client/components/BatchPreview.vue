@@ -344,8 +344,8 @@
         page: paymentPagination.current,
         page_size: paymentPagination.size
       })
-      paymentList.value = res.data.data
-      paymentPagination.total = res.data.total
+      paymentList.value = res.data
+      paymentPagination.total = res.total
     } finally {
       paymentListLoading.value = false
     }
