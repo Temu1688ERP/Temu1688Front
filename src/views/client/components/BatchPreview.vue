@@ -106,6 +106,49 @@
         </ElTableColumn>
       </ElTable>
 
+      <!-- 付款记录列表 -->
+      <div class="payment-section">
+        <h3 class="payment-title">付款记录</h3>
+        <ElTable :data="paymentList" v-loading="paymentListLoading" stripe border>
+          <ElTableColumn prop="id" label="记录ID" width="100" align="center" />
+          <ElTableColumn prop="amount" label="付款金额" width="120" align="right">
+            <template #default="{ row }"> ¥{{ row.amount }} </template>
+          </ElTableColumn>
+          <ElTableColumn label="付款凭证" width="100" align="center">
+            <template #default="{ row }">
+              <ElImage
+                v-if="row.image_url"
+                :src="row.image_url"
+                :preview-src-list="[row.image_url]"
+                fit="cover"
+                style="width: 50px; height: 50px; border-radius: 4px"
+              />
+            </template>
+          </ElTableColumn>
+          <ElTableColumn prop="status" label="状态" width="100" align="center">
+            <template #default="{ row }">
+              <ElTag :type="getPaymentStatusType(row.status)">
+                {{ getPaymentStatusLabel(row.status) }}
+              </ElTag>
+            </template>
+          </ElTableColumn>
+          <ElTableColumn prop="remark" label="备注" min-width="150" show-overflow-tooltip />
+          <ElTableColumn prop="created_at" label="创建时间" width="180" align="center" />
+        </ElTable>
+        <div class="payment-pagination">
+          <ElPagination
+            v-model:current-page="paymentPagination.current"
+            v-model:page-size="paymentPagination.size"
+            :total="paymentPagination.total"
+            :page-sizes="[10, 20, 30, 50]"
+            layout="total, sizes, prev, pager, next, jumper"
+            background
+            @size-change="handlePaymentSizeChange"
+            @current-change="handlePaymentCurrentChange"
+          />
+        </div>
+      </div>
+
       <!-- 上传付款单 -->
       <div class="upload-section">
         <h3 class="upload-title">上传付款单</h3>
@@ -151,49 +194,6 @@
             </ElButton>
           </ElFormItem>
         </ElForm>
-
-        <!-- 付款记录列表 -->
-        <div class="payment-section">
-          <h3 class="payment-title">付款记录</h3>
-          <ElTable :data="paymentList" v-loading="paymentListLoading" stripe border>
-            <ElTableColumn prop="id" label="记录ID" width="100" align="center" />
-            <ElTableColumn prop="amount" label="付款金额" width="120" align="right">
-              <template #default="{ row }"> ¥{{ row.amount }} </template>
-            </ElTableColumn>
-            <ElTableColumn label="付款凭证" width="100" align="center">
-              <template #default="{ row }">
-                <ElImage
-                  v-if="row.image_url"
-                  :src="row.image_url"
-                  :preview-src-list="[row.image_url]"
-                  fit="cover"
-                  style="width: 50px; height: 50px; border-radius: 4px"
-                />
-              </template>
-            </ElTableColumn>
-            <ElTableColumn prop="status" label="状态" width="100" align="center">
-              <template #default="{ row }">
-                <ElTag :type="getPaymentStatusType(row.status)">
-                  {{ getPaymentStatusLabel(row.status) }}
-                </ElTag>
-              </template>
-            </ElTableColumn>
-            <ElTableColumn prop="remark" label="备注" min-width="150" show-overflow-tooltip />
-            <ElTableColumn prop="created_at" label="创建时间" width="180" align="center" />
-          </ElTable>
-          <div class="payment-pagination">
-            <ElPagination
-              v-model:current-page="paymentPagination.current"
-              v-model:page-size="paymentPagination.size"
-              :total="paymentPagination.total"
-              :page-sizes="[10, 20, 30, 50]"
-              layout="total, sizes, prev, pager, next, jumper"
-              background
-              @size-change="handlePaymentSizeChange"
-              @current-change="handlePaymentCurrentChange"
-            />
-          </div>
-        </div>
       </div>
     </ElDrawer>
   </div>
