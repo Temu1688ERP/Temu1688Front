@@ -80,8 +80,8 @@ export interface UploadTicketResponse {
   msg: string
   data: {
     id: number
-    receipt_no: string
-    image_url: string
+    receipt_id: number
+    amount: string
     status: string
     created_at: string
   }
