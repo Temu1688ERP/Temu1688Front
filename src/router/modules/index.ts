@@ -1,6 +1,7 @@
 import { AppRouteRecord } from '@/types/router'
 import { dashboardRoutes } from './dashboard'
 import { systemRoutes } from './system'
+import { financeRoutes } from './finance'
 import { temuRoutes } from './temu'
 import { goodsRoutes } from './goods'
 import { orderRoutes } from './order'
@@ -13,6 +14,7 @@ import { exceptionRoutes } from './exception'
 export const routeModules: AppRouteRecord[] = [
   dashboardRoutes,
   systemRoutes,
+  financeRoutes,
   temuRoutes,
   goodsRoutes,
   orderRoutes,
