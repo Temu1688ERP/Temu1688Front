@@ -248,13 +248,31 @@ declare namespace Api {
     /** 批次列表项 */
     interface ReceiptListItem {
       id: number
-      customer_id: number
-      customer_name: string
-      total_amount: string
-      paid_amount: string
-      status: ReceiptStatus
-      remark: string
       created_at: string
+      updated_at: string
+      account_id: number
+      batch_no: string
+      status: ReceiptStatus
+      goods_total: number
+      total_price: string
+      received_price: string
+      num: number
+      account?: {
+        id: number
+        shop_name: string
+      }
+      payments?: PaymentListItem[]
+      details?: GoodsDetailItem[]
+    }
+
+    /** 商品明细项 */
+    interface GoodsDetailItem {
+      id: number
+      created_at: string
+      goods_id: number
+      price: string
+      num: number
+      received: string
     }
 
     /** 批次列表响应 */
@@ -269,25 +287,6 @@ declare namespace Api {
       page_size?: number
       status?: ReceiptStatus
       customer_id?: number
-    }
-
-    /** 批次详情响应 */
-    type ReceiptDetailResponse = {
-      receipt: ReceiptDetailItem
-      goods: GoodsDetailItem[]
-    }
-
-    /** 批次详情项 */
-    interface ReceiptDetailItem {
-      id: number
-      customer_id: number
-      customer_name: string
-      total_amount: string
-      paid_amount: string
-      status: ReceiptStatus
-      remark: string
-      created_at: string
-      payments: PaymentListItem[]
     }
 
     /** 商品明细项 */

@@ -146,7 +146,7 @@ export function fetchGetReceiptList(params: Api.SystemManage.ReceiptSearchParams
 
 // 获取批次详情
 export function fetchGetReceiptDetail(id: number) {
-  return request.get<Api.SystemManage.ReceiptDetailResponse>({
+  return request.get<Api.SystemManage.ReceiptListItem>({
     url: `/api/receipt/${id}`
   })
 }

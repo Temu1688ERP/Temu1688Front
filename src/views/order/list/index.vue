@@ -44,13 +44,17 @@
   // 批次数据接口
   interface Batch {
     id: number
-    customer_id: number
-    customer_name: string
-    total_amount: string
-    paid_amount: string
+    account_id: number
+    batch_no: string
     status: string
-    remark: string
+    goods_total: number
+    total_price: string
+    received_price: string
+    num: number
     created_at: string
+    account?: {
+      shop_name: string
+    }
   }
 
   // 账号选项
@@ -117,9 +121,10 @@
       },
       columnsFactory: () => [
         { prop: 'id', label: 'ID', minWidth: 50 },
-        { prop: 'customer_name', label: '客户名称', minWidth: 120 },
-        { prop: 'total_amount', label: '总金额', width: 100 },
-        { prop: 'paid_amount', label: '已付金额', width: 100 },
+        { prop: 'batch_no', label: '批次号', minWidth: 120 },
+        { prop: 'account.shop_name', label: '商家名称', minWidth: 150 },
+        { prop: 'total_price', label: '总金额', width: 100 },
+        { prop: 'received_price', label: '已收金额', width: 100 },
         {
           prop: 'status',
           label: '状态',

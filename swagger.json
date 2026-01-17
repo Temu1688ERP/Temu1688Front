@@ -455,43 +455,6 @@
         }
       }
     },
-    "/receipt/select": {
-      "get": {
-        "tags": ["admin-receipt"],
-        "summary": "【系统管理后台】批次下拉选择",
-        "description": "获取批次列表（下拉选择用，可按状态/客户筛选）\n\n**Token 来源**: POST /user/login",
-        "x-token-source": "POST /user/login",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "string", "enum": ["pending", "paid", "cancelled"] },
-            "description": "状态筛选"
-          },
-          {
-            "name": "customer_id",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "integer" },
-            "description": "客户ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "获取成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReceiptSelectResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/receipt": {
       "get": {
         "tags": ["admin-receipt"],
@@ -522,11 +485,11 @@
             "description": "状态筛选"
           },
           {
-            "name": "customer_id",
+            "name": "account_id",
             "in": "query",
             "required": false,
             "schema": { "type": "integer" },
-            "description": "客户ID"
+            "description": "客户账号ID（temu_accounts.id）"
           }
         ],
         "responses": {
@@ -813,6 +776,29 @@
         "description": "获取当前商家的批次列表\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**注意**: 商家只能查看自己的批次",
         "x-token-source": "POST /customer/receipt/get_token",
         "security": [{ "customerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 1 },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 10 },
+            "description": "每页数量"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["pending", "paid", "cancelled"] },
+            "description": "状态筛选"
+          }
+        ],
         "responses": {
           "200": {
             "description": "获取成功",
@@ -831,7 +817,7 @@
       "get": {
         "tags": ["customer-receipt"],
         "summary": "【客户后台】批次详情",
-        "description": "获取当前商家的批次详情（商品明细、批次信息、付款记录及审核历史）\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**注意**: 商家只能查看自己的批次详情\n\n**返回数据说明**:\n| 字段 | 说明 |\n|------|------|\n| data[].goods | 商品信息 |\n| data[].receipt | 批次基本信息（含付款记录） |\n| data[].receipt.payments[].audit_logs | 付款记录审核历史 |",
+        "description": "获取当前商家的批次详情（商品明细、批次信息、付款记录及审核历史）\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**注意**: 商家只能查看自己的批次详情\n\n**请求参数**:\n| 参数 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| id | integer | 是 | 批次ID |\n\n**返回数据说明**:\n| 字段 | 说明 |\n|------|------|\n| data[].goods | 商品信息 |\n| data[].receipt | 批次基本信息（含付款记录） |\n| data[].receipt.payments[] | 付款记录列表（含审核历史） |",
         "x-token-source": "POST /customer/receipt/get_token",
         "security": [{ "customerAuth": [] }],
         "parameters": [
@@ -840,7 +826,7 @@
             "in": "query",
             "required": true,
             "schema": { "type": "integer" },
-            "description": "批次ID（必填）"
+            "description": "批次ID"
           }
         ],
         "responses": {
@@ -849,38 +835,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CustomerReceiptDetailListResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/customer/receipt/ticket/upload": {
-      "post": {
-        "tags": ["customer-receipt"],
-        "summary": "【客户后台】上传付款凭证",
-        "description": "上传付款小票图片并创建付款记录\n\n**功能说明**：\n- 上传图片并自动转换为 JPEG 存储\n- 自动创建付款记录（状态=pending）\n- 自动验证批次归属权限\n\n**Token 来源**: POST /customer/receipt/get_token",
-        "x-token-source": "POST /customer/receipt/get_token",
-        "security": [{ "customerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/TicketUploadRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "上传成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TicketUploadResponse"
+                  "$ref": "#/components/schemas/CustomerReceiptDetailResponse"
                 }
               }
             }
@@ -892,17 +847,10 @@
       "get": {
         "tags": ["customer-receipt"],
         "summary": "【客户后台】付款记录列表",
-        "description": "获取当前商家的付款记录列表\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**查询参数（二选一）**:\n| 参数 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| id | integer | 否 | 付款记录ID（与 receipt_id 二选一）|\n| receipt_id | integer | 否 | 批次ID（与 id 二选一）|\n| status | string | 否 | 状态筛选：pending、rejected |\n\n**注意**: 商家只能查看自己的付款记录",
+        "description": "获取当前商家的付款记录列表\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**查询参数（receipt_id 和 id 二选一）**:\n| 参数 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| receipt_id | integer | 否 | 批次ID（返回该批次下所有付款记录）|\n| id | integer | 否 | 付款记录ID（返回单条付款记录）|\n| status | string | 否 | 状态筛选：pending/rejected |\n| page | integer | 否 | 页码，默认1 |\n| page_size | integer | 否 | 每页数量，默认10 |\n| order | string | 否 | 排序方向：asc/desc，默认desc |\n| order_by | string | 否 | 排序字段：created_at/id，默认created_at |",
         "x-token-source": "POST /customer/receipt/get_token",
         "security": [{ "customerAuth": [] }],
         "parameters": [
-          {
-            "name": "id",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "integer" },
-            "description": "付款记录ID（与 receipt_id 二选一）"
-          },
           {
             "name": "receipt_id",
             "in": "query",
@@ -911,11 +859,18 @@
             "description": "批次ID（与 id 二选一）"
           },
           {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "付款记录ID（与 receipt_id 二选一）"
+          },
+          {
             "name": "status",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "enum": ["pending", "rejected"] },
-            "description": "状态筛选"
+            "schema": { "type": "string" },
+            "description": "状态筛选：pending/rejected"
           },
           {
             "name": "page",
@@ -930,6 +885,20 @@
             "required": false,
             "schema": { "type": "integer", "default": 10 },
             "description": "每页数量"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "desc" },
+            "description": "排序方向：asc/desc"
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "created_at" },
+            "description": "排序字段：created_at/id"
           }
         ],
         "responses": {
@@ -938,7 +907,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReceiptPaymentListResponse"
+                  "$ref": "#/components/schemas/CustomerPaymentListResponse"
                 }
               }
             }
@@ -950,7 +919,7 @@
       "get": {
         "tags": ["customer-receipt"],
         "summary": "【客户后台】付款记录详情",
-        "description": "获取当前商家的指定付款记录详情\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**注意**: 商家只能查看自己的付款记录",
+        "description": "获取当前商家的单条付款记录详情\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**返回数据说明**:\n| 字段 | 说明 |\n|------|------|\n| data.id | 付款记录ID |\n| data.receipt_id | 批次ID |\n| data.amount | 付款金额 |\n| data.image_url | 付款凭证图片（完整URL）|\n| data.status | 状态：pending/rejected/approved |\n| data.remark | 备注 |\n| data.audit_logs | 审核历史列表 |",
         "x-token-source": "POST /customer/receipt/get_token",
         "security": [{ "customerAuth": [] }],
         "parameters": [
@@ -968,7 +937,58 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReceiptPaymentDetailResponse"
+                  "$ref": "#/components/schemas/CustomerPaymentDetailResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customer/receipt/ticket/upload": {
+      "post": {
+        "tags": ["customer-receipt"],
+        "summary": "【客户后台】上传付款凭证",
+        "description": "商家上传付款凭证图片并创建付款记录\n\n**Token 来源**: POST /customer/receipt/get_token\n\n**请求参数（multipart/form-data）**:\n| 参数 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| file | file | 是 | 图片文件（jpg/jpeg/png/gif/bmp/webp）|\n| receipt_id | integer | 是 | 批次ID |\n| amount | number | 是 | 付款金额 |\n| remark | string | 否 | 备注信息 |",
+        "x-token-source": "POST /customer/receipt/get_token",
+        "security": [{ "customerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "receipt_id", "amount"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "图片文件"
+                  },
+                  "receipt_id": {
+                    "type": "integer",
+                    "description": "批次ID"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "description": "付款金额"
+                  },
+                  "remark": {
+                    "type": "string",
+                    "description": "备注信息"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "上传成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerUploadTicketResponse"
                 }
               }
             }
@@ -982,63 +1002,17 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "JWT"
+        "bearerFormat": "JWT",
+        "description": "系统管理后台 JWT Token"
       },
       "customerAuth": {
         "type": "apiKey",
         "in": "header",
-        "name": "Token"
+        "name": "Token",
+        "description": "客户后台 Base64 Token"
       }
     },
     "schemas": {
-      "SuccessResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" }
-        }
-      },
-      "AdminPaymentListResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
-          "data": {
-            "type": "object",
-            "properties": {
-              "total": { "type": "integer", "description": "总条数" },
-              "data": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "id": { "type": "integer", "description": "付款记录ID" },
-                    "receipt_id": { "type": "integer", "description": "批次ID" },
-                    "batch_no": { "type": "string", "description": "批次号" },
-                    "receipt_date": { "type": "string", "description": "批次日期" },
-                    "receipt_status": { "type": "string", "description": "批次状态" },
-                    "amount": { "type": "string", "description": "付款金额" },
-                    "image_url": { "type": "string", "description": "付款凭证图片" },
-                    "status": {
-                      "type": "string",
-                      "description": "付款状态：pending/rejected/approved"
-                    },
-                    "remark": { "type": "string", "description": "备注" },
-                    "uploader_id": { "type": "integer", "description": "上传人ID" },
-                    "uploader_name": { "type": "string", "description": "上传人名称（商家名称）" },
-                    "uploaded_at": { "type": "string", "description": "上传时间" },
-                    "approved_at": { "type": "string", "description": "审核通过时间" },
-                    "approved_by": { "type": "string", "description": "审核人" },
-                    "rejected_at": { "type": "string", "description": "驳回时间" },
-                    "rejected_by": { "type": "string", "description": "驳回人" },
-                    "reject_reason": { "type": "string", "description": "驳回理由" }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
       "LoginRequest": {
         "type": "object",
         "required": ["username", "password"],
@@ -1050,8 +1024,8 @@
       "LoginResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "object",
             "properties": {
@@ -1060,24 +1034,42 @@
           }
         }
       },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer" },
+          "msg": { "type": "string" }
+        }
+      },
       "UserProfileResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "object",
             "properties": {
-              "id": { "type": "integer", "description": "用户ID" },
-              "username": { "type": "string", "description": "用户名" },
-              "nickname": { "type": "string", "description": "昵称" },
-              "roles": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": { "id": { "type": "integer" }, "name": { "type": "string" } }
-                },
-                "description": "角色列表"
+              "id": { "type": "integer" },
+              "username": { "type": "string" },
+              "created_at": { "type": "string" }
+            }
+          }
+        }
+      },
+      "UserListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
+          "total": { "type": "integer" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "username": { "type": "string" },
+                "created_at": { "type": "string" }
               }
             }
           }
@@ -1087,55 +1079,39 @@
         "type": "object",
         "required": ["username", "password"],
         "properties": {
-          "id": { "type": "integer", "description": "用户ID（id=0 创建，id>0 更新）" },
+          "id": { "type": "integer", "description": "用户ID（0创建/更新）" },
           "username": { "type": "string", "description": "用户名" },
-          "password": { "type": "string", "description": "密码" },
-          "nickname": { "type": "string", "description": "昵称" },
-          "role_ids": {
-            "type": "array",
-            "items": { "type": "integer" },
-            "description": "角色ID列表"
-          }
+          "password": { "type": "string", "description": "密码" }
         }
       },
       "CreateUserResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "object",
             "properties": {
-              "id": { "type": "integer", "description": "用户ID" },
-              "username": { "type": "string", "description": "用户名" },
-              "nickname": { "type": "string", "description": "昵称" },
-              "role_ids": {
-                "type": "array",
-                "items": { "type": "integer" },
-                "description": "角色ID列表"
-              }
+              "id": { "type": "integer" },
+              "username": { "type": "string" }
             }
           }
         }
       },
-      "UserListResponse": {
+      "RoleListResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "integer", "description": "用户ID" },
-                "username": { "type": "string", "description": "用户名" },
-                "nickname": { "type": "string", "description": "昵称" },
-                "role_ids": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "description": "角色ID列表"
-                }
+                "id": { "type": "integer" },
+                "name": { "type": "string" },
+                "description": { "type": "string" },
+                "permissions": { "type": "array", "items": { "type": "integer" } }
               }
             }
           }
@@ -1145,7 +1121,7 @@
         "type": "object",
         "required": ["name"],
         "properties": {
-          "id": { "type": "integer", "description": "角色ID（id=0 创建，id>0 更新）" },
+          "id": { "type": "integer", "description": "角色ID（0创建/更新）" },
           "name": { "type": "string", "description": "角色名称" },
           "description": { "type": "string", "description": "角色描述" },
           "permissions": {
@@ -1158,41 +1134,33 @@
       "RoleResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "object",
             "properties": {
-              "id": { "type": "integer", "description": "角色ID" },
-              "name": { "type": "string", "description": "角色名称" },
-              "description": { "type": "string", "description": "角色描述" },
-              "permissions": {
-                "type": "array",
-                "items": { "type": "integer" },
-                "description": "权限ID列表"
-              }
+              "id": { "type": "integer" },
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "permissions": { "type": "array", "items": { "type": "integer" } }
             }
           }
         }
       },
-      "RoleListResponse": {
+      "PermissionListResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "integer", "description": "角色ID" },
-                "name": { "type": "string", "description": "角色名称" },
-                "description": { "type": "string", "description": "角色描述" },
-                "permissions": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "description": "权限ID列表"
-                }
+                "id": { "type": "integer" },
+                "name": { "type": "string" },
+                "path": { "type": "string" },
+                "type": { "type": "string" }
               }
             }
           }
@@ -1202,67 +1170,24 @@
         "type": "object",
         "required": ["name", "path"],
         "properties": {
-          "id": { "type": "integer", "description": "权限ID（id=0 创建，id>0 更新）" },
+          "id": { "type": "integer", "description": "权限ID（0创建/更新）" },
           "name": { "type": "string", "description": "权限名称" },
-          "path": { "type": "string", "description": "权限路径" },
+          "path": { "type": "string", "description": "API路径" },
           "type": { "type": "string", "description": "权限类型" }
         }
       },
       "PermissionResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "object",
             "properties": {
-              "id": { "type": "integer", "description": "权限ID" },
-              "name": { "type": "string", "description": "权限名称" },
-              "path": { "type": "string", "description": "权限路径" },
-              "type": { "type": "string", "description": "权限类型" }
-            }
-          }
-        }
-      },
-      "PermissionListResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
-          "data": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": { "type": "integer", "description": "权限ID" },
-                "name": { "type": "string", "description": "权限名称" },
-                "path": { "type": "string", "description": "权限路径" },
-                "type": { "type": "string", "description": "权限类型" }
-              }
-            }
-          }
-        }
-      },
-      "AddTemuAccountRequest": {
-        "type": "object",
-        "required": ["mobile", "password"],
-        "properties": {
-          "mobile": { "type": "string", "description": "手机号" },
-          "password": { "type": "string", "description": "密码" },
-          "name": { "type": "string", "description": "商家名称" }
-        }
-      },
-      "TemuAccountResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
-          "data": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "integer", "description": "账号ID" },
-              "mobile": { "type": "string", "description": "手机号" },
-              "name": { "type": "string", "description": "商家名称" }
+              "id": { "type": "integer" },
+              "name": { "type": "string" },
+              "path": { "type": "string" },
+              "type": { "type": "string" }
             }
           }
         }
@@ -1270,18 +1195,45 @@
       "TemuAccountListResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "integer", "description": "账号ID" },
-                "mobile": { "type": "string", "description": "手机号" },
-                "name": { "type": "string", "description": "商家名称" },
-                "created_at": { "type": "string", "description": "创建时间" }
+                "id": { "type": "integer" },
+                "username": { "type": "string" },
+                "mobile": { "type": "string" },
+                "shop_name": { "type": "string" },
+                "created_at": { "type": "string" }
               }
+            }
+          }
+        }
+      },
+      "AddTemuAccountRequest": {
+        "type": "object",
+        "required": ["username", "password", "mobile"],
+        "properties": {
+          "username": { "type": "string", "description": "账号（手机号）" },
+          "password": { "type": "string", "description": "密码" },
+          "mobile": { "type": "string", "description": "手机号" },
+          "shop_name": { "type": "string", "description": "店铺名称" }
+        }
+      },
+      "TemuAccountResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "username": { "type": "string" },
+              "mobile": { "type": "string" },
+              "shop_name": { "type": "string" }
             }
           }
         }
@@ -1289,59 +1241,18 @@
       "GoodsListResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "integer", "description": "商品ID" },
-                "goods_id": { "type": "string", "description": "商品编号" },
-                "name": { "type": "string", "description": "商品名称" },
-                "price": { "type": "string", "description": "价格" }
-              }
-            }
-          }
-        }
-      },
-      "ReceiptResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
-          "data": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "integer", "description": "批次ID" },
-              "customer_id": { "type": "integer", "description": "客户ID" },
-              "total_amount": { "type": "string", "description": "总金额" },
-              "paid_amount": { "type": "string", "description": "已付金额" },
-              "status": { "type": "string", "description": "状态" },
-              "remark": { "type": "string", "description": "备注" },
-              "created_at": { "type": "string", "description": "创建时间" }
-            }
-          }
-        }
-      },
-      "ReceiptSelectResponse": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
-          "data": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": { "type": "integer", "description": "批次ID" },
-                "customer_id": { "type": "integer", "description": "客户ID" },
-                "customer_name": { "type": "string", "description": "客户名称" },
-                "total_amount": { "type": "string", "description": "总金额" },
-                "paid_amount": { "type": "string", "description": "已付金额" },
-                "status": { "type": "string", "description": "状态" },
-                "remark": { "type": "string", "description": "备注" },
-                "created_at": { "type": "string", "description": "创建时间" }
+                "id": { "type": "integer" },
+                "goods_id": { "type": "integer" },
+                "name": { "type": "string" },
+                "price": { "type": "number" },
+                "stock_id": { "type": "integer" }
               }
             }
           }
@@ -1350,25 +1261,27 @@
       "AdminReceiptListResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
+          "total": { "type": "integer" },
           "data": {
-            "type": "object",
-            "properties": {
-              "total": { "type": "integer", "description": "总条数" },
-              "data": {
-                "type": "array",
-                "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "batch_no": { "type": "string" },
+                "status": { "type": "string" },
+                "goods_total": { "type": "integer" },
+                "num": { "type": "integer", "description": "商品总件数" },
+                "total_price": { "type": "string" },
+                "received_price": { "type": "string" },
+                "account": {
                   "type": "object",
                   "properties": {
-                    "id": { "type": "integer", "description": "批次ID" },
-                    "customer_id": { "type": "integer", "description": "客户ID" },
-                    "customer_name": { "type": "string", "description": "客户名称" },
-                    "total_amount": { "type": "string", "description": "总金额" },
-                    "paid_amount": { "type": "string", "description": "已付金额" },
-                    "status": { "type": "string", "description": "状态" },
-                    "remark": { "type": "string", "description": "备注" },
-                    "created_at": { "type": "string", "description": "创建时间" }
+                    "id": { "type": "integer" },
+                    "shop_name": { "type": "string" },
+                    "mobile": { "type": "string" }
                   }
                 }
               }
@@ -1379,50 +1292,77 @@
       "AdminReceiptDetailResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "object",
             "properties": {
-              "receipt": {
+              "id": { "type": "integer" },
+              "batch_no": { "type": "string" },
+              "status": { "type": "string" },
+              "goods_total": { "type": "integer" },
+              "total_price": { "type": "string" },
+              "received_price": { "type": "string" },
+              "account": {
                 "type": "object",
                 "properties": {
-                  "id": { "type": "integer", "description": "批次ID" },
-                  "customer_id": { "type": "integer", "description": "客户ID" },
-                  "customer_name": { "type": "string", "description": "客户名称" },
-                  "total_amount": { "type": "string", "description": "总金额" },
-                  "paid_amount": { "type": "string", "description": "已付金额" },
-                  "status": { "type": "string", "description": "状态" },
-                  "remark": { "type": "string", "description": "备注" },
-                  "created_at": { "type": "string", "description": "创建时间" },
-                  "payments": {
-                    "type": "array",
-                    "description": "付款记录列表",
-                    "items": {
+                  "id": { "type": "integer" },
+                  "shop_name": { "type": "string" },
+                  "mobile": { "type": "string" }
+                }
+              },
+              "payments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer" },
+                    "amount": { "type": "string" },
+                    "image_url": { "type": "string" },
+                    "status": { "type": "string" },
+                    "remark": { "type": "string" },
+                    "created_at": { "type": "string" },
+                    "account": {
                       "type": "object",
                       "properties": {
-                        "id": { "type": "integer", "description": "付款记录ID" },
-                        "amount": { "type": "string", "description": "付款金额" },
-                        "image_url": { "type": "string", "description": "付款凭证图片" },
-                        "status": { "type": "string", "description": "状态" },
-                        "remark": { "type": "string", "description": "备注" },
-                        "created_at": { "type": "string", "description": "创建时间" }
+                        "id": { "type": "integer" },
+                        "username": { "type": "string" }
+                      }
+                    },
+                    "audit_logs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer" },
+                          "status": { "type": "string" },
+                          "operator_name": { "type": "string" },
+                          "reason": { "type": "string" },
+                          "created_at": { "type": "string" }
+                        }
                       }
                     }
                   }
                 }
               },
-              "goods": {
+              "details": {
                 "type": "array",
-                "description": "商品列表",
                 "items": {
                   "type": "object",
                   "properties": {
-                    "id": { "type": "integer", "description": "明细ID" },
-                    "goods_id": { "type": "integer", "description": "商品ID" },
-                    "goods_name": { "type": "string", "description": "商品名称" },
-                    "price": { "type": "string", "description": "单价" },
-                    "quantity": { "type": "integer", "description": "数量" }
+                    "id": { "type": "integer" },
+                    "goods_id": { "type": "integer" },
+                    "num": { "type": "integer" },
+                    "price": { "type": "string" },
+                    "goods": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer" },
+                        "goods_id": { "type": "integer" },
+                        "name": { "type": "string" },
+                        "price": { "type": "number" }
+                      }
+                    }
                   }
                 }
               }
@@ -1430,40 +1370,68 @@
           }
         }
       },
-      "AdminApproveRequest": {
-        "type": "object",
-        "required": ["paid_amount"],
-        "properties": {
-          "paid_amount": { "type": "string", "description": "本次实际收款金额" }
-        }
-      },
-      "AdminRejectRequest": {
-        "type": "object",
-        "required": ["reason"],
-        "properties": {
-          "reason": { "type": "string", "description": "拒绝理由" }
-        }
-      },
-      "AuditLogResponse": {
+      "AdminPaymentListResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
+          "total": { "type": "integer" },
           "data": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "integer", "description": "审核记录ID" },
-                "payment_id": { "type": "integer", "description": "付款记录ID" },
-                "status": {
-                  "type": "string",
-                  "description": "审核状态：pending、approved、rejected"
-                },
-                "operator_id": { "type": "integer", "description": "操作人ID" },
-                "operator_name": { "type": "string", "description": "操作人名称" },
-                "reason": { "type": "string", "description": "拒绝理由" },
-                "created_at": { "type": "string", "description": "操作时间" }
+                "id": { "type": "integer" },
+                "receipt_id": { "type": "integer" },
+                "batch_no": { "type": "string" },
+                "amount": { "type": "string" },
+                "image_url": { "type": "string" },
+                "status": { "type": "string" },
+                "uploader_id": { "type": "integer" },
+                "uploader_name": { "type": "string" },
+                "uploaded_at": { "type": "string" },
+                "approved_at": { "type": "string" },
+                "approved_by": { "type": "string" },
+                "rejected_at": { "type": "string" },
+                "rejected_by": { "type": "string" },
+                "reject_reason": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "AdminApproveRequest": {
+        "type": "object",
+        "required": ["amount"],
+        "properties": {
+          "amount": { "type": "number", "description": "实际确认的付款金额" },
+          "remark": { "type": "string", "description": "备注" }
+        }
+      },
+      "AdminRejectRequest": {
+        "type": "object",
+        "required": ["remark"],
+        "properties": {
+          "remark": { "type": "string", "description": "拒绝原因" }
+        }
+      },
+      "AuditLogResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "payment_id": { "type": "integer" },
+                "receipt_id": { "type": "integer" },
+                "status": { "type": "string" },
+                "operator_name": { "type": "string" },
+                "reason": { "type": "string" },
+                "created_at": { "type": "string" }
               }
             }
           }
@@ -1480,12 +1448,12 @@
       "GetTokenResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "object",
             "properties": {
-              "token": { "type": "string", "description": "商家访问 Token" }
+              "token": { "type": "string", "description": "访问 Token" }
             }
           }
         }
@@ -1493,78 +1461,74 @@
       "CustomerReceiptListResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
+          "total": { "type": "integer" },
           "data": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "integer", "description": "批次ID" },
-                "total_amount": { "type": "string", "description": "总金额" },
-                "paid_amount": { "type": "string", "description": "已付金额" },
-                "status": { "type": "string", "description": "状态" },
-                "remark": { "type": "string", "description": "备注" },
-                "created_at": { "type": "string", "description": "创建时间" }
+                "id": { "type": "integer" },
+                "batch_no": { "type": "string" },
+                "status": { "type": "string" },
+                "goods_total": { "type": "integer" },
+                "total_price": { "type": "string" },
+                "received_price": { "type": "string" },
+                "created_at": { "type": "string" }
               }
             }
           }
         }
       },
-      "CustomerReceiptDetailListResponse": {
+      "CustomerReceiptDetailResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
                 "goods": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": { "type": "integer", "description": "明细ID" },
-                      "goods_id": { "type": "integer", "description": "商品ID" },
-                      "goods_name": { "type": "string", "description": "商品名称" },
-                      "price": { "type": "string", "description": "单价" },
-                      "quantity": { "type": "integer", "description": "数量" }
-                    }
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer" },
+                    "goods_id": { "type": "integer" },
+                    "name": { "type": "string" },
+                    "price": { "type": "number" }
                   }
                 },
                 "receipt": {
                   "type": "object",
                   "properties": {
-                    "id": { "type": "integer", "description": "批次ID" },
-                    "total_amount": { "type": "string", "description": "总金额" },
-                    "paid_amount": { "type": "string", "description": "已付金额" },
-                    "status": { "type": "string", "description": "状态" },
-                    "remark": { "type": "string", "description": "备注" },
-                    "created_at": { "type": "string", "description": "创建时间" },
+                    "id": { "type": "integer" },
+                    "batch_no": { "type": "string" },
+                    "status": { "type": "string" },
+                    "total_price": { "type": "string" },
+                    "received_price": { "type": "string" },
                     "payments": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "id": { "type": "integer", "description": "付款记录ID" },
-                          "amount": { "type": "string", "description": "付款金额" },
-                          "image_url": { "type": "string", "description": "付款凭证图片" },
-                          "status": { "type": "string", "description": "状态" },
-                          "remark": { "type": "string", "description": "备注" },
-                          "created_at": { "type": "string", "description": "创建时间" },
+                          "id": { "type": "integer" },
+                          "amount": { "type": "string" },
+                          "image_url": { "type": "string" },
+                          "status": { "type": "string" },
+                          "remark": { "type": "string" },
+                          "created_at": { "type": "string" },
                           "audit_logs": {
                             "type": "array",
-                            "description": "审核历史",
                             "items": {
                               "type": "object",
                               "properties": {
-                                "id": { "type": "integer", "description": "审核记录ID" },
-                                "status": { "type": "string", "description": "审核状态" },
-                                "operator_name": { "type": "string", "description": "操作人" },
-                                "reason": { "type": "string", "description": "拒绝理由" },
-                                "created_at": { "type": "string", "description": "操作时间" }
+                                "id": { "type": "integer" },
+                                "status": { "type": "string" },
+                                "operator_name": { "type": "string" },
+                                "reason": { "type": "string" },
+                                "created_at": { "type": "string" }
                               }
                             }
                           }
@@ -1578,55 +1542,54 @@
           }
         }
       },
-      "TicketUploadRequest": {
-        "type": "object",
-        "required": ["file", "receipt_id", "amount"],
-        "properties": {
-          "file": { "type": "string", "format": "binary", "description": "图片文件" },
-          "receipt_id": { "type": "string", "description": "批次ID" },
-          "amount": { "type": "string", "description": "付款金额" },
-          "remark": { "type": "string", "description": "备注" }
-        }
-      },
-      "TicketUploadResponse": {
+      "CustomerPaymentListResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
+          "total": { "type": "integer" },
           "data": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "integer", "description": "付款记录ID" },
-              "receipt_id": { "type": "integer", "description": "批次ID" },
-              "amount": { "type": "string", "description": "付款金额" },
-              "image_url": { "type": "string", "description": "付款凭证图片URL" },
-              "status": { "type": "string", "description": "状态" },
-              "created_at": { "type": "string", "description": "创建时间" }
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "integer" },
+                "receipt_id": { "type": "integer" },
+                "amount": { "type": "string" },
+                "image_url": { "type": "string" },
+                "status": { "type": "string" },
+                "remark": { "type": "string" },
+                "created_at": { "type": "string" }
+              }
             }
           }
         }
       },
-      "ReceiptPaymentListResponse": {
+      "CustomerPaymentDetailResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "object",
             "properties": {
-              "total": { "type": "integer", "description": "总条数" },
-              "data": {
+              "id": { "type": "integer" },
+              "receipt_id": { "type": "integer" },
+              "amount": { "type": "string" },
+              "image_url": { "type": "string" },
+              "status": { "type": "string" },
+              "remark": { "type": "string" },
+              "created_at": { "type": "string" },
+              "audit_logs": {
                 "type": "array",
                 "items": {
                   "type": "object",
                   "properties": {
-                    "id": { "type": "integer", "description": "付款记录ID" },
-                    "receipt_id": { "type": "integer", "description": "批次ID" },
-                    "amount": { "type": "string", "description": "付款金额" },
-                    "image_url": { "type": "string", "description": "付款凭证图片" },
-                    "status": { "type": "string", "description": "状态" },
-                    "remark": { "type": "string", "description": "备注" },
-                    "created_at": { "type": "string", "description": "创建时间" }
+                    "id": { "type": "integer" },
+                    "status": { "type": "string" },
+                    "operator_name": { "type": "string" },
+                    "reason": { "type": "string" },
+                    "created_at": { "type": "string" }
                   }
                 }
               }
@@ -1634,21 +1597,20 @@
           }
         }
       },
-      "ReceiptPaymentDetailResponse": {
+      "CustomerUploadTicketResponse": {
         "type": "object",
         "properties": {
-          "code": { "type": "integer", "example": 0 },
-          "msg": { "type": "string", "example": "success" },
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
           "data": {
             "type": "object",
             "properties": {
-              "id": { "type": "integer", "description": "付款记录ID" },
-              "receipt_id": { "type": "integer", "description": "批次ID" },
-              "amount": { "type": "string", "description": "付款金额" },
-              "image_url": { "type": "string", "description": "付款凭证图片" },
-              "status": { "type": "string", "description": "状态" },
-              "remark": { "type": "string", "description": "备注" },
-              "created_at": { "type": "string", "description": "创建时间" }
+              "id": { "type": "integer" },
+              "receipt_id": { "type": "integer" },
+              "amount": { "type": "string" },
+              "image_url": { "type": "string" },
+              "status": { "type": "string" },
+              "created_at": { "type": "string" }
             }
           }
         }
