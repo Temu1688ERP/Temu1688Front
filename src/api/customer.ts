@@ -126,6 +126,7 @@ export interface PaymentRecord {
   image_url: string
   status: string
   remark: string
+  rejected_reason: string
   created_at: string
 }
 

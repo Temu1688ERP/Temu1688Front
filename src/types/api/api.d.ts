@@ -178,6 +178,60 @@ declare namespace Api {
       principal: string
       status?: TemuStatus
     }
+
+    /** 付款记录状态 */
+    type PaymentStatus = 'pending' | 'approved' | 'rejected'
+
+    /** 付款记录列表项 */
+    interface PaymentListItem {
+      id: number
+      created_at: string
+      updated_at: string
+      deleted_at: string | null
+      receipt_id: number
+      amount: string
+      image_url: string
+      status: PaymentStatus
+      remark: string
+      rejected_reason: string
+      audit_logs: AuditLogItem[]
+    }
+
+    /** 审核日志项 */
+    interface AuditLogItem {
+      id: number
+      payment_id: number
+      status: PaymentStatus
+      operator_id: number
+      operator_name: string
+      reason: string
+      created_at: string
+    }
+
+    /** 付款记录列表响应 */
+    type PaymentListResponse = {
+      total: number
+      data: PaymentListItem[]
+    }
+
+    /** 付款记录搜索参数 */
+    type PaymentSearchParams = {
+      id?: number
+      receipt_id?: number
+      status?: PaymentStatus
+      page?: number
+      page_size?: number
+    }
+
+    /** 审核通过请求 */
+    interface ApprovePaymentParams {
+      paid_amount: string
+    }
+
+    /** 审核拒绝请求 */
+    interface RejectPaymentParams {
+      reason: string
+    }
   }
 
   /** 商品管理类型 */

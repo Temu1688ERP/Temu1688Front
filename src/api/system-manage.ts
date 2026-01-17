@@ -103,3 +103,35 @@ export function fetchDeleteTemu(id: number) {
     data: { id }
   })
 }
+
+// 获取付款记录列表
+export function fetchGetPaymentList(params: Api.SystemManage.PaymentSearchParams) {
+  return request.get<Api.SystemManage.PaymentListResponse>({
+    url: '/api/receipt/payment/list',
+    params
+  })
+}
+
+// 审核通过
+export function fetchApprovePayment(id: number, data: Api.SystemManage.ApprovePaymentParams) {
+  return request.post({
+    url: `/api/receipt/${id}/approve`,
+    data
+  })
+}
+
+// 审核拒绝
+export function fetchRejectPayment(id: number, data: Api.SystemManage.RejectPaymentParams) {
+  return request.post({
+    url: `/api/receipt/${id}/reject`,
+    data
+  })
+}
+
+// 获取审核历史
+export function fetchAuditLogs(params: { payment_id?: number; receipt_id?: number }) {
+  return request.get<{ data: Api.SystemManage.AuditLogItem[] }>({
+    url: '/api/receipt/audit_logs',
+    params
+  })
+}

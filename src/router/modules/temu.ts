@@ -19,6 +19,16 @@ export const temuRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
+    },
+    {
+      path: 'payments',
+      name: 'TemuPayments',
+      component: '/system/temu/modules/payment-list',
+      meta: {
+        title: '付款单审核',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
     }
   ]
 }

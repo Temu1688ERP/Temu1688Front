@@ -132,6 +132,12 @@
               </ElTag>
             </template>
           </ElTableColumn>
+          <ElTableColumn
+            prop="rejected_reason"
+            label="拒绝理由"
+            min-width="150"
+            show-overflow-tooltip
+          />
           <ElTableColumn prop="remark" label="备注" min-width="150" show-overflow-tooltip />
           <ElTableColumn prop="created_at" label="创建时间" width="180" align="center" />
         </ElTable>
