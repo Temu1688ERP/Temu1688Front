@@ -538,10 +538,14 @@
   }
 
   :deep(.el-image__preview) {
-    z-index: 9999 !important;
+    z-index: 3000 !important;
+  }
+
+  :deep(.el-overlay) {
+    z-index: 2999 !important;
   }
 
   :deep(.el-image__wrapper) {
-    z-index: auto;
+    z-index: auto !important;
   }
 </style>
