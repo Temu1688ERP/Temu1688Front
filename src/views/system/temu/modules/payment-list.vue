@@ -30,7 +30,7 @@
 
     <ElCard class="art-table-card" shadow="never">
       <!-- 表格 -->
-      <ElTable :data="data" v-loading="loading" stripe border>
+      <ElTable :data="data" v-loading="loading" stripe border @row-click="handleRowClick">
         <ElTableColumn prop="id" label="记录ID" width="80" align="center" />
         <ElTableColumn prop="batch_no" label="批次号" width="140" align="center" />
         <ElTableColumn prop="receipt_date" label="批次日期" width="110" align="center" />
@@ -156,6 +156,72 @@
         <ElTableColumn prop="created_at" label="操作时间" width="180" align="center" />
       </ElTable>
     </ElDialog>
+
+    <!-- 付款记录详情对话框 -->
+    <ElDialog v-model="detailVisible" title="付款记录详情" width="800px">
+      <div class="detail-section">
+        <h4 class="section-title">基本信息</h4>
+        <ElDescriptions :column="2" border>
+          <ElDescriptionsItem label="记录ID">{{ currentDetail?.id }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="批次号">{{ currentDetail?.batch_no }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="批次日期">{{
+            currentDetail?.receipt_date
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="批次状态">
+            <ElTag :type="getReceiptStatusType(currentDetail?.receipt_status)">
+              {{ getReceiptStatusLabel(currentDetail?.receipt_status) }}
+            </ElTag>
+          </ElDescriptionsItem>
+          <ElDescriptionsItem label="商家名称">{{
+            currentDetail?.uploader_name
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="商家ID">{{ currentDetail?.uploader_id }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="付款金额">¥{{ currentDetail?.amount }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="付款状态">
+            <ElTag :type="getStatusType(currentDetail?.status)">
+              {{ getStatusLabel(currentDetail?.status) }}
+            </ElTag>
+          </ElDescriptionsItem>
+          <ElDescriptionsItem label="备注" :span="2">{{
+            currentDetail?.remark || '-'
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="上传时间">{{ currentDetail?.uploaded_at }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="拒绝理由">{{
+            currentDetail?.reject_reason || '-'
+          }}</ElDescriptionsItem>
+        </ElDescriptions>
+      </div>
+
+      <div class="detail-section">
+        <h4 class="section-title">付款凭证</h4>
+        <ElImage
+          v-if="currentDetail?.image_url"
+          :src="currentDetail.image_url"
+          :preview-src-list="[currentDetail.image_url]"
+          fit="contain"
+          style="width: 200px; height: 200px; cursor: pointer; border-radius: 4px"
+        />
+        <span v-else>-</span>
+      </div>
+
+      <div class="detail-section">
+        <h4 class="section-title">审核历史</h4>
+        <ElTable :data="auditLogs" stripe border max-height="300">
+          <ElTableColumn prop="id" label="ID" width="80" align="center" />
+          <ElTableColumn prop="status" label="审核状态" width="100" align="center">
+            <template #default="{ row }">
+              <ElTag :type="getLogStatusType(row.status)">
+                {{ getLogStatusLabel(row.status) }}
+              </ElTag>
+            </template>
+          </ElTableColumn>
+          <ElTableColumn prop="operator_name" label="操作人" width="100" align="center" />
+          <ElTableColumn prop="reason" label="理由" min-width="150" />
+          <ElTableColumn prop="created_at" label="操作时间" width="180" align="center" />
+        </ElTable>
+        <ElEmpty v-if="auditLogs.length === 0" description="暂无审核记录" :image-size="80" />
+      </div>
+    </ElDialog>
   </div>
 </template>
 
@@ -196,10 +262,11 @@
     shipping: { label: '发货中', type: 'info' }
   }
 
-  const getStatusLabel = (status: string) => STATUS_MAP[status]?.label || status
-  const getStatusType = (status: string) => STATUS_MAP[status]?.type || 'info'
-  const getReceiptStatusLabel = (status: string) => RECEIPT_STATUS_MAP[status]?.label || status
-  const getReceiptStatusType = (status: string) => RECEIPT_STATUS_MAP[status]?.type || 'info'
+  const getStatusLabel = (status?: string) => STATUS_MAP[status || '']?.label || status || ''
+  const getStatusType = (status?: string) => STATUS_MAP[status || '']?.type || 'info'
+  const getReceiptStatusLabel = (status?: string) =>
+    RECEIPT_STATUS_MAP[status || '']?.label || status || ''
+  const getReceiptStatusType = (status?: string) => RECEIPT_STATUS_MAP[status || '']?.type || 'info'
   const getLogStatusLabel = (status: string) => STATUS_MAP[status]?.label || status
   const getLogStatusType = (status: string) => STATUS_MAP[status]?.type || 'info'
 
@@ -254,6 +321,10 @@
   const auditLogs = ref<
     { id: number; status: string; operator_name: string; reason: string; created_at: string }[]
   >([])
+
+  // 详情弹窗
+  const detailVisible = ref(false)
+  const currentDetail = ref<PaymentListItem | null>(null)
 
   // 日期范围变化
   const handleDateChange = (val: [string, string] | null) => {
@@ -386,6 +457,21 @@
     }
   }
 
+  // 点击行查看详情
+  const handleRowClick = async (row: PaymentListItem) => {
+    currentDetail.value = row
+    detailVisible.value = true
+
+    // 获取审核历史
+    try {
+      const res = await fetchAuditLogs({ payment_id: row.id })
+      auditLogs.value = res.data
+    } catch (error) {
+      console.error('获取审核历史失败:', error)
+      auditLogs.value = []
+    }
+  }
+
   onMounted(() => {
     getData()
   })
@@ -420,11 +506,32 @@
     th.el-table__cell:last-child {
       border-right: none;
     }
+
+    .el-table__row {
+      cursor: pointer;
+    }
   }
 
   .table-pagination {
     display: flex;
     justify-content: center;
     margin-top: 20px;
+  }
+
+  .detail-section {
+    margin-bottom: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      padding-left: 8px;
+      margin-bottom: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #303133;
+      border-left: 3px solid #409eff;
+    }
   }
 </style>
