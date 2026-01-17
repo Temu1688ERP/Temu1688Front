@@ -40,13 +40,12 @@
           />
         </template>
         <template #operation="{ row }">
+          <ElButton type="primary" link size="small" @click="handleViewDetail(row)">查看</ElButton>
           <template v-if="row.status === 'pending'">
-            <ElButton type="success" size="small" @click="handleApprove(row)">通过</ElButton>
-            <ElButton type="danger" size="small" @click="handleReject(row)">拒绝</ElButton>
+            <ElButton type="success" link size="small" @click="handleApprove(row)">通过</ElButton>
+            <ElButton type="danger" link size="small" @click="handleReject(row)">拒绝</ElButton>
           </template>
-          <ElButton v-else type="info" size="small" @click="handleViewLogs(row)">
-            查看审核历史
-          </ElButton>
+          <ElButton type="info" link size="small" @click="handleViewLogs(row)"> 审核历史 </ElButton>
         </template>
       </ArtTable>
     </ElCard>
@@ -176,23 +175,25 @@
 
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-  import { useTable } from '@/hooks/core/useTable'
   import {
-    fetchGetPaymentList,
-    fetchApprovePayment,
-    fetchRejectPayment,
-    fetchAuditLogs
-  } from '@/api/system-manage'
-  import PaymentSearch from './modules/payment-search.vue'
-  import {
-    ElTag,
-    ElImage,
+    ElButton,
     ElDescriptions,
     ElDescriptionsItem,
     ElEmpty,
-    ElButton
+    ElImage,
+    ElMessage,
+    ElTag,
+    type FormInstance,
+    type FormRules
   } from 'element-plus'
+  import { useTable } from '@/hooks/core/useTable'
+  import {
+    fetchApprovePayment,
+    fetchAuditLogs,
+    fetchGetPaymentList,
+    fetchRejectPayment
+  } from '@/api/system-manage'
+  import PaymentSearch from './modules/payment-search.vue'
 
   defineOptions({ name: 'PaymentAudit' })
 
@@ -263,10 +264,21 @@
   const detailVisible = ref(false)
   const currentDetail = ref<PaymentListItem | null>(null)
 
+  const handleViewDetail = async (row: PaymentListItem) => {
+    currentDetail.value = row
+    detailVisible.value = true
+
+    try {
+      auditLogs.value = await fetchAuditLogs({ payment_id: row.id })
+    } catch (error) {
+      console.error('获取审核历史失败:', error)
+      auditLogs.value = []
+    }
+  }
+
   const handleViewLogs = async (row: PaymentListItem) => {
     try {
-      const res = await fetchAuditLogs({ payment_id: row.id })
-      auditLogs.value = res.data
+      auditLogs.value = await fetchAuditLogs({ payment_id: row.id })
       logsVisible.value = true
     } catch (error) {
       console.error('获取审核历史失败:', error)

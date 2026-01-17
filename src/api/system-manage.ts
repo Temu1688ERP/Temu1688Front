@@ -130,7 +130,7 @@ export function fetchRejectPayment(id: number, data: Api.SystemManage.RejectPaym
 
 // 获取审核历史
 export function fetchAuditLogs(params: { payment_id?: number; receipt_id?: number }) {
-  return request.get<{ data: Api.SystemManage.AuditLogItem[] }>({
+  return request.get<Api.SystemManage.AuditLogItem[]>({
     url: '/api/receipt/audit_logs',
     params
   })
