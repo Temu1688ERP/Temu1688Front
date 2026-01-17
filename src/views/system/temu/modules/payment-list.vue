@@ -537,15 +537,11 @@
     }
   }
 
-  :deep(.el-image__preview) {
-    z-index: 3000 !important;
+  :deep(.el-image-viewer) {
+    z-index: 9999 !important;
   }
 
-  :deep(.el-overlay) {
-    z-index: 2999 !important;
-  }
-
-  :deep(.el-image__wrapper) {
-    z-index: auto !important;
+  :deep(.el-image-viewer__wrapper) {
+    z-index: 9999 !important;
   }
 </style>
