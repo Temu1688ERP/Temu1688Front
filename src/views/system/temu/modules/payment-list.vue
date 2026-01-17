@@ -46,6 +46,7 @@
               :preview-src-list="[row.image_url]"
               fit="cover"
               style="width: 50px; height: 50px; cursor: pointer; border-radius: 4px"
+              :hide-on-click-modal="true"
             />
           </template>
         </ElTableColumn>
@@ -200,6 +201,7 @@
           :preview-src-list="[currentDetail.image_url]"
           fit="contain"
           style="width: 200px; height: 200px; cursor: pointer; border-radius: 4px"
+          :hide-on-click-modal="true"
         />
         <span v-else>-</span>
       </div>
@@ -533,5 +535,13 @@
       color: #303133;
       border-left: 3px solid #409eff;
     }
+  }
+
+  :deep(.el-image__preview) {
+    z-index: 9999 !important;
+  }
+
+  :deep(.el-image__wrapper) {
+    z-index: auto;
   }
 </style>

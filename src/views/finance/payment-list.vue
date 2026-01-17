@@ -46,6 +46,7 @@
               :preview-src-list="[row.image_url]"
               fit="cover"
               style="width: 50px; height: 50px; cursor: pointer; border-radius: 4px"
+              :hide-on-click-modal="true"
               @click.stop
             />
           </template>
@@ -132,6 +133,7 @@
           :preview-src-list="[currentDetail.image_url]"
           fit="contain"
           style="width: 200px; height: 200px; cursor: pointer; border-radius: 4px"
+          :hide-on-click-modal="true"
         />
         <span v-else>-</span>
       </div>
@@ -349,5 +351,13 @@
     th.el-table__cell:last-child {
       border-right: none;
     }
+  }
+
+  :deep(.el-image__preview) {
+    z-index: 9999 !important;
+  }
+
+  :deep(.el-image__wrapper) {
+    z-index: auto;
   }
 </style>
