@@ -19,6 +19,16 @@ export const financeRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
+    },
+    {
+      path: 'payment-list',
+      name: 'PaymentList',
+      component: '/finance/payment-list',
+      meta: {
+        title: '所有付款单',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
     }
   ]
 }
