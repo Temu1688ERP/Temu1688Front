@@ -25,7 +25,7 @@ export const financeRoutes: AppRouteRecord = {
       name: 'PaymentList',
       component: '/finance/payment-list',
       meta: {
-        title: '所有付款单',
+        title: '付款记录',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
