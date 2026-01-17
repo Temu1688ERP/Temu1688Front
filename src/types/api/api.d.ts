@@ -241,6 +241,63 @@ declare namespace Api {
     interface RejectPaymentParams {
       reason: string
     }
+
+    /** 批次状态 */
+    type ReceiptStatus = 'pending' | 'paid' | 'cancelled'
+
+    /** 批次列表项 */
+    interface ReceiptListItem {
+      id: number
+      customer_id: number
+      customer_name: string
+      total_amount: string
+      paid_amount: string
+      status: ReceiptStatus
+      remark: string
+      created_at: string
+    }
+
+    /** 批次列表响应 */
+    type ReceiptListResponse = {
+      total: number
+      data: ReceiptListItem[]
+    }
+
+    /** 批次搜索参数 */
+    type ReceiptSearchParams = {
+      page?: number
+      page_size?: number
+      status?: ReceiptStatus
+      customer_id?: number
+    }
+
+    /** 批次详情响应 */
+    type ReceiptDetailResponse = {
+      receipt: ReceiptDetailItem
+      goods: GoodsDetailItem[]
+    }
+
+    /** 批次详情项 */
+    interface ReceiptDetailItem {
+      id: number
+      customer_id: number
+      customer_name: string
+      total_amount: string
+      paid_amount: string
+      status: ReceiptStatus
+      remark: string
+      created_at: string
+      payments: PaymentListItem[]
+    }
+
+    /** 商品明细项 */
+    interface GoodsDetailItem {
+      id: number
+      goods_id: number
+      goods_name: string
+      price: string
+      quantity: number
+    }
   }
 
   /** 商品管理类型 */

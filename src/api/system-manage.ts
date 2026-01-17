@@ -135,3 +135,18 @@ export function fetchAuditLogs(params: { payment_id?: number; receipt_id?: numbe
     params
   })
 }
+
+// 获取批次列表
+export function fetchGetReceiptList(params: Api.SystemManage.ReceiptSearchParams) {
+  return request.get<Api.SystemManage.ReceiptListResponse>({
+    url: '/api/receipt',
+    params
+  })
+}
+
+// 获取批次详情
+export function fetchGetReceiptDetail(id: number) {
+  return request.get<Api.SystemManage.ReceiptDetailResponse>({
+    url: `/api/receipt/${id}`
+  })
+}

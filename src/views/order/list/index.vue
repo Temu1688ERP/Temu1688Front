@@ -25,122 +25,74 @@
       >
       </ArtTable>
     </ElCard>
+
+    <!-- 批次详情弹窗 -->
+    <ReceiptDetail v-model="detailVisible" :receipt-id="currentReceiptId" />
   </div>
 </template>
 
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
   import OrderSearch from './modules/order-search.vue'
-  import { ElButton } from 'element-plus'
+  import ReceiptDetail from './modules/receipt-detail.vue'
+  import { ElButton, ElTag } from 'element-plus'
+  import { fetchGetReceiptList } from '@/api/system-manage'
+  import { fetchGetTemuList } from '@/api/system-manage'
 
   defineOptions({ name: 'StockList' })
 
-  // 批次数据（mock）
+  // 批次数据接口
   interface Batch {
     id: number
-    account_id: number
-    name: string
-    total_count: number
-    prepared_count: number
-    receivable_amount: number // 应收金额
-    actual_amount: number // 实际收金额
+    customer_id: number
+    customer_name: string
+    total_amount: string
+    paid_amount: string
+    status: string
+    remark: string
     created_at: string
-    updated_at: string
   }
 
-  // mock 账号选项
-  const accountOptions = ref([
-    { label: '账号1', value: 1 },
-    { label: '账号2', value: 2 },
-    { label: '账号3', value: 3 }
-  ])
+  // 账号选项
+  const accountOptions = ref<Array<{ label: string; value: number }>>([])
+
+  // 详情弹窗
+  const detailVisible = ref(false)
+  const currentReceiptId = ref<number | null>(null)
+
+  // 加载账号选项
+  const loadAccountOptions = async () => {
+    try {
+      const res = await fetchGetTemuList({})
+      accountOptions.value = res.map((item: any) => ({
+        label: item.name || item.username,
+        value: item.id
+      }))
+    } catch (error) {
+      console.error('加载账号选项失败:', error)
+    }
+  }
+
+  loadAccountOptions()
 
   // 搜索表单
   const searchForm = ref({
-    account_id: undefined
+    account_id: undefined as number | undefined,
+    status: undefined as string | undefined
   })
 
-  // mock 批次数据
-  const allBatches: Batch[] = [
-    {
-      id: 1,
-      account_id: 1,
-      name: '批次1',
-      total_count: 100,
-      prepared_count: 80,
-      receivable_amount: 5000.0,
-      actual_amount: 4800.0,
-      created_at: '2024-12-20 10:30:00',
-      updated_at: '2024-12-20 15:30:00'
-    },
-    {
-      id: 2,
-      account_id: 1,
-      name: '批次2',
-      total_count: 50,
-      prepared_count: 50,
-      receivable_amount: 2500.0,
-      actual_amount: 2500.0,
-      created_at: '2024-12-19 14:20:00',
-      updated_at: '2024-12-19 18:20:00'
-    },
-    {
-      id: 3,
-      account_id: 1,
-      name: '批次3',
-      total_count: 200,
-      prepared_count: 120,
-      receivable_amount: 10000.0,
-      actual_amount: 6000.0,
-      created_at: '2024-12-18 09:15:00',
-      updated_at: '2024-12-18 16:15:00'
-    },
-    {
-      id: 4,
-      account_id: 2,
-      name: '批次1',
-      total_count: 80,
-      prepared_count: 60,
-      receivable_amount: 4000.0,
-      actual_amount: 3000.0,
-      created_at: '2024-12-21 11:00:00',
-      updated_at: '2024-12-21 14:00:00'
-    },
-    {
-      id: 5,
-      account_id: 2,
-      name: '批次2',
-      total_count: 150,
-      prepared_count: 150,
-      receivable_amount: 7500.0,
-      actual_amount: 7500.0,
-      created_at: '2024-12-20 16:45:00',
-      updated_at: '2024-12-20 20:45:00'
-    },
-    {
-      id: 6,
-      account_id: 3,
-      name: '批次1',
-      total_count: 30,
-      prepared_count: 10,
-      receivable_amount: 1500.0,
-      actual_amount: 500.0,
-      created_at: '2024-12-22 08:30:00',
-      updated_at: '2024-12-22 09:30:00'
-    }
-  ]
-
-  // Mock API 函数
+  // API 函数
   const fetchBatchList = async (params: Record<string, any>) => {
-    // 模拟 API 返回
-    let filteredBatches = allBatches
-    if (params.account_id) {
-      filteredBatches = allBatches.filter((batch) => batch.account_id === params.account_id)
-    }
+    const res = await fetchGetReceiptList({
+      page: params.page,
+      page_size: params.pageSize,
+      customer_id: params.account_id,
+      status: params.status
+    })
     return {
       data: {
-        list: filteredBatches,
-        total: filteredBatches.length
+        list: res.data,
+        total: res.total
       }
     }
   }
@@ -165,38 +117,42 @@
       },
       columnsFactory: () => [
         { prop: 'id', label: 'ID', minWidth: 50 },
-        { prop: 'name', label: '批次', minWidth: 150 },
-        { prop: 'total_count', label: '备货总数', width: 100 },
-        { prop: 'prepared_count', label: '已备货数', width: 100 },
-        { prop: 'receivable_amount', label: '应收金额', width: 120 },
-        { prop: 'actual_amount', label: '实收金额', width: 120 },
-        { prop: 'updated_at', label: '更新时间', width: 180 },
+        { prop: 'customer_name', label: '客户名称', minWidth: 120 },
+        { prop: 'total_amount', label: '总金额', width: 100 },
+        { prop: 'paid_amount', label: '已付金额', width: 100 },
+        {
+          prop: 'status',
+          label: '状态',
+          width: 100,
+          formatter: (row: Batch) => {
+            const statusMap: Record<
+              string,
+              { label: string; type: 'primary' | 'success' | 'warning' | 'info' | 'danger' }
+            > = {
+              pending: { label: '待付款', type: 'warning' },
+              paid: { label: '已付款', type: 'success' },
+              cancelled: { label: '已取消', type: 'info' }
+            }
+            const status = statusMap[row.status] || { label: row.status, type: 'info' }
+            return h(ElTag, { type: status.type }, () => status.label)
+          }
+        },
+        { prop: 'created_at', label: '创建时间', width: 180 },
         {
           prop: 'operation',
           label: '操作',
-          width: 150,
+          width: 80,
           fixed: 'right',
           formatter: (row: Batch) =>
-            h('div', { style: { display: 'flex', gap: '8px' } }, [
-              h(
-                ElButton,
-                {
-                  type: 'primary',
-                  link: true,
-                  onClick: () => handleView(row)
-                },
-                () => '查看'
-              ),
-              h(
-                ElButton,
-                {
-                  type: 'success',
-                  link: true,
-                  onClick: () => handleComplete(row)
-                },
-                () => '完成'
-              )
-            ])
+            h(
+              ElButton,
+              {
+                type: 'primary',
+                link: true,
+                onClick: () => handleView(row)
+              },
+              () => '查看'
+            )
         }
       ]
     }
@@ -213,13 +169,7 @@
 
   // 查看批次详情
   const handleView = (batch: Batch) => {
-    console.log('查看批次:', batch)
-    // TODO: 跳转到批次详情页
-  }
-
-  // 完成批次
-  const handleComplete = (batch: Batch) => {
-    console.log('完成批次:', batch)
-    // TODO: 完成批次操作
+    currentReceiptId.value = batch.id
+    detailVisible.value = true
   }
 </script>

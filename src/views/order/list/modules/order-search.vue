@@ -34,6 +34,12 @@
   const rules = {}
 
   // 表单配置
+  const statusOptions = [
+    { label: '待付款', value: 'pending' },
+    { label: '已付款', value: 'paid' },
+    { label: '已取消', value: 'cancelled' }
+  ]
+
   const formItems = computed(() => [
     {
       label: '账号',
@@ -42,6 +48,14 @@
       placeholder: '请选择账号',
       clearable: true,
       options: props.accountOptions
+    },
+    {
+      label: '状态',
+      key: 'status',
+      type: 'select',
+      placeholder: '请选择状态',
+      clearable: true,
+      options: statusOptions
     }
   ])
 
