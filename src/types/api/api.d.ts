@@ -189,12 +189,21 @@ declare namespace Api {
       updated_at: string
       deleted_at: string | null
       receipt_id: number
+      batch_no: string
+      receipt_date: string
+      receipt_status: string
       amount: string
       image_url: string
       status: PaymentStatus
       remark: string
-      rejected_reason: string
-      audit_logs: AuditLogItem[]
+      uploader_id: number
+      uploader_name: string
+      uploaded_at: string
+      approved_at: string
+      approved_by: string
+      rejected_at: string
+      rejected_by: string
+      reject_reason: string
     }
 
     /** 审核日志项 */
@@ -216,9 +225,9 @@ declare namespace Api {
 
     /** 付款记录搜索参数 */
     type PaymentSearchParams = {
-      id?: number
-      receipt_id?: number
       status?: PaymentStatus
+      start_date?: string
+      end_date?: string
       page?: number
       page_size?: number
     }

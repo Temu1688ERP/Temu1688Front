@@ -3,15 +3,23 @@
     <!-- 搜索栏 -->
     <div class="search-bar">
       <ElForm :model="searchForm" label-width="100px" inline>
-        <ElFormItem label="批次ID">
-          <ElInputNumber v-model="searchForm.receipt_id" :min="0" placeholder="请输入批次ID" />
-        </ElFormItem>
         <ElFormItem label="状态">
           <ElSelect v-model="searchForm.status" placeholder="请选择状态" clearable>
             <ElOption label="待审核" value="pending" />
-            <ElOption label="已审核" value="approved" />
+            <ElOption label="已通过" value="approved" />
             <ElOption label="已拒绝" value="rejected" />
           </ElSelect>
+        </ElFormItem>
+        <ElFormItem label="日期范围">
+          <ElDatePicker
+            v-model="dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            @change="handleDateChange"
+          />
         </ElFormItem>
         <ElFormItem>
           <ElButton type="primary" @click="handleSearch">搜索</ElButton>
@@ -24,7 +32,9 @@
       <!-- 表格 -->
       <ElTable :data="data" v-loading="loading" stripe border>
         <ElTableColumn prop="id" label="记录ID" width="80" align="center" />
-        <ElTableColumn prop="receipt_id" label="批次ID" width="100" align="center" />
+        <ElTableColumn prop="batch_no" label="批次号" width="140" align="center" />
+        <ElTableColumn prop="receipt_date" label="批次日期" width="110" align="center" />
+        <ElTableColumn prop="uploader_name" label="商家名称" width="120" />
         <ElTableColumn prop="amount" label="付款金额" width="120" align="right">
           <template #default="{ row }"> ¥{{ row.amount }} </template>
         </ElTableColumn>
@@ -39,21 +49,28 @@
             />
           </template>
         </ElTableColumn>
-        <ElTableColumn prop="status" label="状态" width="100" align="center">
+        <ElTableColumn prop="status" label="付款状态" width="100" align="center">
           <template #default="{ row }">
             <ElTag :type="getStatusType(row.status)">
               {{ getStatusLabel(row.status) }}
             </ElTag>
           </template>
         </ElTableColumn>
-        <ElTableColumn prop="remark" label="备注" min-width="150" show-overflow-tooltip />
+        <ElTableColumn prop="receipt_status" label="批次状态" width="100" align="center">
+          <template #default="{ row }">
+            <ElTag :type="getReceiptStatusType(row.receipt_status)">
+              {{ getReceiptStatusLabel(row.receipt_status) }}
+            </ElTag>
+          </template>
+        </ElTableColumn>
+        <ElTableColumn prop="remark" label="备注" min-width="120" show-overflow-tooltip />
         <ElTableColumn
-          prop="rejected_reason"
+          prop="reject_reason"
           label="拒绝理由"
           min-width="150"
           show-overflow-tooltip
         />
-        <ElTableColumn prop="created_at" label="创建时间" width="180" align="center" />
+        <ElTableColumn prop="uploaded_at" label="上传时间" width="180" align="center" />
         <ElTableColumn label="操作" width="180" align="center" fixed="right">
           <template #default="{ row }">
             <template v-if="row.status === 'pending'">
@@ -152,34 +169,48 @@
     fetchAuditLogs
   } from '@/api/system-manage'
 
-  defineOptions({ name: 'PaymentList' })
+  defineOptions({ name: 'PaymentAudit' })
 
   type PaymentListItem = Api.SystemManage.PaymentListItem
-  type AuditLogItem = Api.SystemManage.AuditLogItem
+  type PaymentStatus = Api.SystemManage.PaymentStatus
 
-  // 状态映射
-  type StatusConfig = {
-    label: string
-    type: 'warning' | 'success' | 'danger' | 'info'
-  }
-
-  const STATUS_MAP: Record<string, StatusConfig> = {
+  // 付款状态映射
+  const STATUS_MAP: Record<
+    string,
+    { label: string; type: 'warning' | 'success' | 'danger' | 'info' }
+  > = {
     pending: { label: '待审核', type: 'warning' },
     approved: { label: '已通过', type: 'success' },
     rejected: { label: '已拒绝', type: 'danger' }
   }
 
+  // 批次状态映射
+  const RECEIPT_STATUS_MAP: Record<
+    string,
+    { label: string; type: 'success' | 'warning' | 'danger' | 'info' }
+  > = {
+    pending: { label: '待付款', type: 'warning' },
+    pending_purchase: { label: '待采购', type: 'info' },
+    paid: { label: '已付款', type: 'success' },
+    closed: { label: '已关闭', type: 'danger' },
+    shipping: { label: '发货中', type: 'info' }
+  }
+
   const getStatusLabel = (status: string) => STATUS_MAP[status]?.label || status
   const getStatusType = (status: string) => STATUS_MAP[status]?.type || 'info'
-
+  const getReceiptStatusLabel = (status: string) => RECEIPT_STATUS_MAP[status]?.label || status
+  const getReceiptStatusType = (status: string) => RECEIPT_STATUS_MAP[status]?.type || 'info'
   const getLogStatusLabel = (status: string) => STATUS_MAP[status]?.label || status
   const getLogStatusType = (status: string) => STATUS_MAP[status]?.type || 'info'
 
   // 搜索表单
   const searchForm = reactive({
-    receipt_id: undefined as number | undefined,
-    status: '' as string
+    status: '',
+    start_date: '',
+    end_date: ''
   })
+
+  const dateRange = ref<[string, string] | null>(null)
 
   // 分页
   const pagination = reactive({
@@ -220,15 +251,29 @@
 
   // 审核历史
   const logsVisible = ref(false)
-  const auditLogs = ref<AuditLogItem[]>([])
+  const auditLogs = ref<
+    { id: number; status: string; operator_name: string; reason: string; created_at: string }[]
+  >([])
+
+  // 日期范围变化
+  const handleDateChange = (val: [string, string] | null) => {
+    if (val) {
+      searchForm.start_date = val[0]
+      searchForm.end_date = val[1]
+    } else {
+      searchForm.start_date = ''
+      searchForm.end_date = ''
+    }
+  }
 
   // 获取数据
   const getData = async () => {
     loading.value = true
     try {
       const res = await fetchGetPaymentList({
-        receipt_id: searchForm.receipt_id,
-        status: (searchForm.status as PaymentListItem['status']) || undefined,
+        status: (searchForm.status as PaymentStatus) || undefined,
+        start_date: searchForm.start_date || undefined,
+        end_date: searchForm.end_date || undefined,
         page: pagination.current,
         page_size: pagination.size
       })
@@ -247,8 +292,10 @@
 
   // 重置
   const resetSearch = () => {
-    searchForm.receipt_id = undefined
     searchForm.status = ''
+    searchForm.start_date = ''
+    searchForm.end_date = ''
+    dateRange.value = null
     pagination.current = 1
     getData()
   }

@@ -601,6 +601,64 @@
         }
       }
     },
+    "/payment": {
+      "get": {
+        "tags": ["admin-receipt"],
+        "summary": "【系统管理后台】付款记录列表",
+        "description": "获取所有付款记录列表（后台管理专用）\n\n**关联信息**：\n- 批次号、批次状态\n- 商家名称（上传人）\n- 上传时间、审核时间、驳回时间\n\n**查询参数**:\n| 参数 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| status | string | 否 | 状态筛选：pending/rejected/approved |\n| start_date | string | 否 | 开始日期（YYYY-MM-DD）|\n| end_date | string | 否 | 结束日期（YYYY-MM-DD）|\n| page | integer | 否 | 页码，默认1 |\n| page_size | integer | 否 | 每页数量，默认10 |\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "状态筛选：pending/rejected/approved"
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "开始日期（YYYY-MM-DD）"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "结束日期（YYYY-MM-DD）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 1 },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 10 },
+            "description": "每页数量"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPaymentListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/receipt/{id}/approve": {
       "post": {
         "tags": ["admin-receipt"],
@@ -938,6 +996,47 @@
         "properties": {
           "code": { "type": "integer", "example": 0 },
           "msg": { "type": "string", "example": "success" }
+        }
+      },
+      "AdminPaymentListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 0 },
+          "msg": { "type": "string", "example": "success" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "total": { "type": "integer", "description": "总条数" },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer", "description": "付款记录ID" },
+                    "receipt_id": { "type": "integer", "description": "批次ID" },
+                    "batch_no": { "type": "string", "description": "批次号" },
+                    "receipt_date": { "type": "string", "description": "批次日期" },
+                    "receipt_status": { "type": "string", "description": "批次状态" },
+                    "amount": { "type": "string", "description": "付款金额" },
+                    "image_url": { "type": "string", "description": "付款凭证图片" },
+                    "status": {
+                      "type": "string",
+                      "description": "付款状态：pending/rejected/approved"
+                    },
+                    "remark": { "type": "string", "description": "备注" },
+                    "uploader_id": { "type": "integer", "description": "上传人ID" },
+                    "uploader_name": { "type": "string", "description": "上传人名称（商家名称）" },
+                    "uploaded_at": { "type": "string", "description": "上传时间" },
+                    "approved_at": { "type": "string", "description": "审核通过时间" },
+                    "approved_by": { "type": "string", "description": "审核人" },
+                    "rejected_at": { "type": "string", "description": "驳回时间" },
+                    "rejected_by": { "type": "string", "description": "驳回人" },
+                    "reject_reason": { "type": "string", "description": "驳回理由" }
+                  }
+                }
+              }
+            }
+          }
         }
       },
       "LoginRequest": {

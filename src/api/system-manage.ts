@@ -107,7 +107,7 @@ export function fetchDeleteTemu(id: number) {
 // 获取付款记录列表
 export function fetchGetPaymentList(params: Api.SystemManage.PaymentSearchParams) {
   return request.get<Api.SystemManage.PaymentListResponse>({
-    url: '/api/receipt/payment/list',
+    url: '/api/payment',
     params
   })
 }
