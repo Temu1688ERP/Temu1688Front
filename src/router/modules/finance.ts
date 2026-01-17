@@ -15,7 +15,7 @@ export const financeRoutes: AppRouteRecord = {
       name: 'PaymentAudit',
       component: '/system/temu/modules/payment-list',
       meta: {
-        title: '付款单审核',
+        title: '付款单',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
@@ -25,7 +25,7 @@ export const financeRoutes: AppRouteRecord = {
       name: 'PaymentList',
       component: '/finance/payment-list',
       meta: {
-        title: '付款记录',
+        title: '所有付款单',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
