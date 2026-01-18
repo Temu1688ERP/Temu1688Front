@@ -37,6 +37,10 @@
       "description": "【系统管理后台】商品管理 - Token 来源: POST /user/login"
     },
     {
+      "name": "admin-self-goods",
+      "description": "【系统管理后台】自建商品管理 - Token 来源: POST /user/login - 可创建商品并分配给 Temu 账号"
+    },
+    {
       "name": "admin-receipt",
       "description": "【系统管理后台】批次管理 - Token 来源: POST /user/login - 可查看/审核所有商家的批次"
     },
@@ -448,6 +452,234 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GoodsListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/self_goods": {
+      "get": {
+        "tags": ["admin-self-goods"],
+        "summary": "【系统管理后台】自建商品列表",
+        "description": "获取自建商品列表，支持分页、名称搜索、按Temu账号筛选\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 1 },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 10 },
+            "description": "每页数量"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "商品名称（模糊搜索）"
+          },
+          {
+            "name": "temu_account_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "description": "Temu账号ID（查询分配给该账号的商品）"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSelfGoodsListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["admin-self-goods"],
+        "summary": "【系统管理后台】创建/更新自建商品",
+        "description": "创建或更新自建商品\n- 有 id 参数：更新商品\n- 无 id 参数：创建商品\n\n支持 JSON 和 form-data 两种提交方式\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSelfGoodsCreateRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "cost_price", "price"],
+                "properties": {
+                  "id": { "type": "integer", "description": "商品ID（0创建，更新时传入）" },
+                  "name": { "type": "string", "description": "商品名称" },
+                  "description": { "type": "string", "description": "商品详情" },
+                  "cost_price": { "type": "string", "description": "成本价" },
+                  "price": { "type": "string", "description": "售价" },
+                  "image_file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "商品图片文件（创建时必填，更新时可选）"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSelfGoodsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/self_goods/{id}": {
+      "get": {
+        "tags": ["admin-self-goods"],
+        "summary": "【系统管理后台】自建商品详情",
+        "description": "获取自建商品详情（包含关联的Temu账号列表）\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "商品ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSelfGoodsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["admin-self-goods"],
+        "summary": "【系统管理后台】删除自建商品",
+        "description": "删除自建商品（级联删除关联记录）\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "商品ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/self_goods/assign": {
+      "post": {
+        "tags": ["admin-self-goods"],
+        "summary": "【系统管理后台】分配商品",
+        "description": "将自建商品分配给指定的Temu账号\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSelfGoodsAssignRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSelfGoodsAssignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "分配成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSelfGoodsAssignResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/self_goods/unassign": {
+      "post": {
+        "tags": ["admin-self-goods"],
+        "summary": "【系统管理后台】取消分配",
+        "description": "取消自建商品与Temu账号的关联\n\n**Token 来源**: POST /user/login",
+        "x-token-source": "POST /user/login",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSelfGoodsUnassignRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSelfGoodsUnassignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "取消分配成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSelfGoodsAssignResponse"
                 }
               }
             }
@@ -1256,6 +1488,110 @@
               }
             }
           }
+        }
+      },
+      "AdminSelfGoodsListResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "total": { "type": "integer" },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer" },
+                    "name": { "type": "string" },
+                    "description": { "type": "string" },
+                    "cost_price": { "type": "string" },
+                    "price": { "type": "string" },
+                    "image_url": { "type": "string" },
+                    "created_at": { "type": "string" },
+                    "updated_at": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "AdminSelfGoodsCreateRequest": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "商品ID（0创建，更新时传入）" },
+          "name": { "type": "string", "description": "商品名称" },
+          "description": { "type": "string", "description": "商品详情" },
+          "cost_price": { "type": "string", "description": "成本价" },
+          "price": { "type": "string", "description": "售价" },
+          "image_file": {
+            "type": "string",
+            "format": "binary",
+            "description": "商品图片文件（创建时必填，更新时可选）"
+          }
+        }
+      },
+      "AdminSelfGoodsResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "name": { "type": "string" },
+              "description": { "type": "string" },
+              "cost_price": { "type": "string" },
+              "price": { "type": "string" },
+              "image_url": { "type": "string" },
+              "created_at": { "type": "string" },
+              "updated_at": { "type": "string" },
+              "temu_accounts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer" },
+                    "phone": { "type": "string" },
+                    "shop_name": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "AdminSelfGoodsAssignRequest": {
+        "type": "object",
+        "required": ["self_goods_id", "temu_account_ids"],
+        "properties": {
+          "self_goods_id": { "type": "integer", "description": "商品ID" },
+          "temu_account_ids": {
+            "type": "string",
+            "description": "Temu账号ID列表（逗号分隔，支持批量）"
+          }
+        }
+      },
+      "AdminSelfGoodsUnassignRequest": {
+        "type": "object",
+        "required": ["self_goods_id", "temu_account_ids"],
+        "properties": {
+          "self_goods_id": { "type": "integer", "description": "商品ID" },
+          "temu_account_ids": {
+            "type": "string",
+            "description": "Temu账号ID列表（逗号分隔，支持批量）"
+          }
+        }
+      },
+      "AdminSelfGoodsAssignResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer" },
+          "msg": { "type": "string" }
         }
       },
       "AdminReceiptListResponse": {

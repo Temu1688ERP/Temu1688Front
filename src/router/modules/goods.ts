@@ -19,6 +19,16 @@ export const goodsRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
+    },
+    {
+      path: 'self-built',
+      name: 'GoodsSelfBuilt',
+      component: '/goods/self-built',
+      meta: {
+        title: '自建商品',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
     }
   ]
 }

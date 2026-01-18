@@ -30,10 +30,10 @@
           </div>
         </div>
         <ul class="py-4 mt-3 border-t border-g-300/80">
-          <li class="btn-item" @click="goPage('/system/user-center')">
-            <ArtSvgIcon icon="ri:user-3-line" />
-            <span>个人中心</span>
-          </li>
+          <!--<li class="btn-item" @click="goPage('/system/user-center')">-->
+          <!--  <ArtSvgIcon icon="ri:user-3-line" />-->
+          <!--  <span>个人中心</span>-->
+          <!--</li>-->
           <li class="btn-item" @click="lockScreen()">
             <ArtSvgIcon icon="ri:lock-line" />
             <span>锁定屏幕</span>
@@ -47,14 +47,14 @@
 </template>
 
 <script setup lang="ts">
-  import { useRouter } from 'vue-router'
+  // import { useRouter } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
   import { useUserStore } from '@/store/modules/user'
   import { mittBus } from '@/utils/sys'
 
   defineOptions({ name: 'ArtUserMenu' })
 
-  const router = useRouter()
+  // const router = useRouter()
   const userStore = useUserStore()
 
   const { getUserInfo: userInfo } = storeToRefs(userStore)
@@ -64,9 +64,9 @@
    * 页面跳转
    * @param {string} path - 目标路径
    */
-  const goPage = (path: string): void => {
-    router.push(path)
-  }
+  // const goPage = (path: string): void => {
+  //   router.push(path)
+  // }
 
   /**
    * 打开锁屏功能

@@ -167,7 +167,10 @@ declare namespace Api {
     }
 
     /** TEMU搜索参数 */
-    type TemuSearchParams = Partial<Pick<TemuListItem, 'id' | 'username' | 'status'>>
+    type TemuSearchParams = Partial<Pick<TemuListItem, 'id' | 'username' | 'status'>> & {
+      page?: number
+      page_size?: number
+    }
 
     /** TEMU表单参数 */
     interface TemuFormParams {
@@ -296,6 +299,71 @@ declare namespace Api {
       goods_name: string
       price: string
       quantity: number
+    }
+  }
+
+  /** 自建商品管理类型 */
+  namespace SelfGoods {
+    /** 自建商品列表项 */
+    interface SelfGoodsItem {
+      id: number
+      name: string
+      description: string
+      cost_price: string
+      price: string
+      image_url: string
+      created_at: string
+      updated_at: string
+      temu_accounts?: {
+        id: number
+        phone: string
+        shop_name: string
+      }[]
+    }
+
+    /** 自建商品列表响应 */
+    interface SelfGoodsListResponse {
+      total: number
+      data: SelfGoodsItem[]
+    }
+
+    /** 自建商品搜索参数 */
+    interface SelfGoodsSearchParams {
+      page?: number
+      page_size?: number
+      name?: string
+      temu_account_id?: number
+    }
+
+    /** 自建商品详情响应（包含关联账号） */
+    interface SelfGoodsDetailItem extends SelfGoodsItem {
+      temu_accounts?: {
+        id: number
+        phone: string
+        shop_name: string
+      }[]
+    }
+
+    /** 创建/更新自建商品参数 */
+    interface SelfGoodsFormParams {
+      id?: number
+      name: string
+      description?: string
+      cost_price: string
+      price: string
+      image_file?: File
+    }
+
+    /** 分配商品参数 */
+    interface AssignParams {
+      self_goods_id: number
+      temu_account_ids: string
+    }
+
+    /** 取消分配商品参数 */
+    interface UnassignParams {
+      self_goods_id: number
+      temu_account_ids: string
     }
   }
 
